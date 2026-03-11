@@ -5,8 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import CostForm from "./cost-form";
-import UserManagement from "./user-management";
-import DateManagement from "./date-management";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -21,9 +19,9 @@ export default async function DashboardPage() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  // Fetch user's cars (as driver)
+  // Fetch user's cars (as owner)
   const myCars = await prisma.car.findMany({
-    where: { driverId: userId },
+    where: { ownerId: userId },
   });
 
   // Fetch today's trips for the user
@@ -39,21 +37,6 @@ export default async function DashboardPage() {
   const debts = await calculateDebts(startOfMonth, endOfMonth);
   const myDebt = debts.find((d) => d.userId === userId);
 
-  // Admin data
-  const allUsers = isAdmin
-    ? await prisma.user.findMany({
-        select: { id: true, name: true, email: true, role: true },
-        orderBy: [{ role: "asc" }, { name: "asc" }],
-      })
-    : [];
-
-  const disabledDates = isAdmin
-    ? await prisma.disabledDate.findMany({
-        where: { date: { gte: today } },
-        orderBy: { date: "asc" },
-      })
-    : [];
-
   return (
     <main className="mx-auto max-w-3xl p-6">
       <header className="mb-8 flex items-center justify-between">
@@ -68,12 +51,22 @@ export default async function DashboardPage() {
             )}
           </p>
         </div>
-        <a
-          href="/api/auth/signout"
-          className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
-        >
-          Sign Out
-        </a>
+        <div className="flex gap-3">
+          {isAdmin && (
+            <a
+              href="/admin"
+              className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              Admin Panel
+            </a>
+          )}
+          <a
+            href="/api/auth/signout"
+            className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
+          >
+            Sign Out
+          </a>
+        </div>
       </header>
 
       {/* Today's Rides */}
@@ -156,45 +149,12 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      {/* Driver: Enter Costs */}
+      {/* Driver: Enter Costs (quick access — also available in Admin panel) */}
       {myCars.length > 0 && (
         <section className="mb-8 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-lg font-semibold">Enter Daily Costs</h2>
           <CostForm cars={myCars.map((c) => ({ id: c.id, name: c.name }))} />
         </section>
-      )}
-
-      {/* Admin Panels */}
-      {isAdmin && (
-        <>
-          <section className="mb-8 rounded-lg border-2 border-red-200 bg-white p-6 shadow">
-            <h2 className="mb-4 text-lg font-semibold text-red-700">
-              Admin: User Management
-            </h2>
-            <UserManagement
-              users={allUsers.map((u) => ({
-                id: u.id,
-                name: u.name,
-                email: u.email,
-                role: u.role,
-              }))}
-              currentUserId={userId}
-            />
-          </section>
-
-          <section className="rounded-lg border-2 border-red-200 bg-white p-6 shadow">
-            <h2 className="mb-4 text-lg font-semibold text-red-700">
-              Admin: Operating Days
-            </h2>
-            <DateManagement
-              disabledDates={disabledDates.map((d) => ({
-                id: d.id,
-                date: d.date.toISOString().split("T")[0],
-                reason: d.reason,
-              }))}
-            />
-          </section>
-        </>
       )}
     </main>
   );
