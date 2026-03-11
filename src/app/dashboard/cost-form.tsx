@@ -37,15 +37,20 @@ export default function CostForm({ cars }: CostFormProps) {
     }
   }
 
+  const inputClass =
+    "w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm shadow-sm transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:outline-none";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">Car</label>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Car
+          </label>
           <select
             value={carId}
             onChange={(e) => setCarId(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            className={inputClass}
           >
             {cars.map((car) => (
               <option key={car.id} value={car.id}>
@@ -55,19 +60,23 @@ export default function CostForm({ cars }: CostFormProps) {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Date</label>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Date
+          </label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">Gas Cost ($)</label>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Gas Cost ($)
+          </label>
           <input
             type="number"
             step="0.01"
@@ -75,11 +84,13 @@ export default function CostForm({ cars }: CostFormProps) {
             value={gasCost}
             onChange={(e) => setGasCost(e.target.value)}
             placeholder="0.00"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Parking Cost ($)</label>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Parking Cost ($)
+          </label>
           <input
             type="number"
             step="0.01"
@@ -87,7 +98,7 @@ export default function CostForm({ cars }: CostFormProps) {
             value={parkingCost}
             onChange={(e) => setParkingCost(e.target.value)}
             placeholder="0.00"
-            className="w-full rounded-md border border-gray-300 px-3 py-2"
+            className={inputClass}
           />
         </div>
       </div>
@@ -95,13 +106,19 @@ export default function CostForm({ cars }: CostFormProps) {
       <button
         type="submit"
         disabled={status === "saving"}
-        className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
       >
-        {status === "saving" ? "Saving..." : status === "saved" ? "Saved!" : "Save Costs"}
+        {status === "saving"
+          ? "Saving..."
+          : status === "saved"
+            ? "Saved!"
+            : "Save Costs"}
       </button>
 
       {status === "error" && (
-        <p className="text-sm text-red-600">Failed to save. Please try again.</p>
+        <p className="text-sm font-medium text-red-600">
+          Failed to save. Please try again.
+        </p>
       )}
     </form>
   );

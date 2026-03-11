@@ -15,7 +15,19 @@ export default function RootLayout({
   return (
     <ClerkProvider dynamic>
       <html lang="en">
-        <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+          />
+        </head>
+        <body className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/40 font-sans text-gray-900 antialiased">
           {children}
         </body>
       </html>
