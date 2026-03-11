@@ -1,0 +1,107 @@
+"use client";
+
+import { useTransition } from "react";
+import { approveUser, setUserRole } from "@/lib/admin-actions";
+import type { Role } from "@prisma/client";
+
+interface UserManagementProps {
+  users: { id: string; name: string | null; email: string; role: Role }[];
+  currentUserId: string;
+}
+
+const roleBadge: Record<Role, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  USER: "bg-green-100 text-green-800",
+  ADMIN: "bg-red-100 text-red-800",
+};
+
+export default function UserManagement({ users, currentUserId }: UserManagementProps) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleApprove(userId: string) {
+    startTransition(async () => {
+      await approveUser(userId);
+    });
+  }
+
+  function handleRoleChange(userId: string, newRole: Role) {
+    startTransition(async () => {
+      await setUserRole(userId, newRole);
+    });
+  }
+
+  const pendingUsers = users.filter((u) => u.role === "PENDING");
+  const activeUsers = users.filter((u) => u.role !== "PENDING");
+
+  return (
+    <div className="space-y-6">
+      {/* Pending Approvals */}
+      {pendingUsers.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-yellow-700">
+            Pending Approval ({pendingUsers.length})
+          </h3>
+          <ul className="space-y-2">
+            {pendingUsers.map((user) => (
+              <li
+                key={user.id}
+                className="flex items-center justify-between rounded-md bg-yellow-50 px-4 py-3"
+              >
+                <div>
+                  <p className="font-medium">{user.name ?? "No name"}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+                <button
+                  onClick={() => handleApprove(user.id)}
+                  disabled={isPending}
+                  className="rounded bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  Approve
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Active Users */}
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-gray-600">
+          Active Users ({activeUsers.length})
+        </h3>
+        <ul className="space-y-2">
+          {activeUsers.map((user) => (
+            <li
+              key={user.id}
+              className="flex items-center justify-between rounded-md bg-gray-50 px-4 py-3"
+            >
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="font-medium">{user.name ?? "No name"}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${roleBadge[user.role]}`}
+                >
+                  {user.role}
+                </span>
+              </div>
+              {user.id !== currentUserId && (
+                <select
+                  value={user.role}
+                  onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
+                  disabled={isPending}
+                  className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
+                >
+                  <option value="USER">USER</option>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="PENDING">PENDING</option>
+                </select>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}

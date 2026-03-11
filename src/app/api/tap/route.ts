@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { TripType } from "@prisma/client";
+import { TripType, Role } from "@prisma/client";
 
 const DEBOUNCE_HOURS = 2;
 const EVENING_GAP_HOURS = 4;
@@ -22,6 +22,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // --- Check: user must not be PENDING ---
+  if (session.user.role === Role.PENDING) {
+    const pendingUrl = new URL("/pending-approval", request.url);
+    return NextResponse.redirect(pendingUrl);
+  }
+
   const carId = request.nextUrl.searchParams.get("carId");
   if (!carId) {
     return NextResponse.json({ error: "Missing carId parameter" }, { status: 400 });
@@ -35,6 +41,17 @@ export async function GET(request: NextRequest) {
   const userId = session.user.id;
   const now = new Date();
   const today = startOfDay(now);
+
+  // --- Check: date must not be disabled ---
+  const disabledDate = await prisma.disabledDate.findUnique({
+    where: { date: today },
+  });
+  if (disabledDate) {
+    const successUrl = new URL("/tap-success", request.url);
+    successUrl.searchParams.set("status", "disabled");
+    successUrl.searchParams.set("reason", disabledDate.reason ?? "System is disabled for today");
+    return NextResponse.redirect(successUrl);
+  }
 
   // --- Debounce: prevent duplicate taps within 2 hours ---
   const debounceThreshold = new Date(now.getTime() - DEBOUNCE_HOURS * 60 * 60 * 1000);

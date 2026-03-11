@@ -3,13 +3,18 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDebts } from "@/lib/cost-splitting";
+import { Role } from "@prisma/client";
 import CostForm from "./cost-form";
+import UserManagement from "./user-management";
+import DateManagement from "./date-management";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/login");
+  if (session.user.role === Role.PENDING) redirect("/pending-approval");
 
   const userId = session.user.id;
+  const isAdmin = session.user.role === Role.ADMIN;
 
   // Date range: current month
   const now = new Date();
@@ -34,6 +39,21 @@ export default async function DashboardPage() {
   const debts = await calculateDebts(startOfMonth, endOfMonth);
   const myDebt = debts.find((d) => d.userId === userId);
 
+  // Admin data
+  const allUsers = isAdmin
+    ? await prisma.user.findMany({
+        select: { id: true, name: true, email: true, role: true },
+        orderBy: [{ role: "asc" }, { name: "asc" }],
+      })
+    : [];
+
+  const disabledDates = isAdmin
+    ? await prisma.disabledDate.findMany({
+        where: { date: { gte: today } },
+        orderBy: { date: "asc" },
+      })
+    : [];
+
   return (
     <main className="mx-auto max-w-3xl p-6">
       <header className="mb-8 flex items-center justify-between">
@@ -41,6 +61,11 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-sm text-gray-500">
             Welcome, {session.user.name ?? session.user.email}
+            {isAdmin && (
+              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                Admin
+              </span>
+            )}
           </p>
         </div>
         <a
@@ -133,10 +158,43 @@ export default async function DashboardPage() {
 
       {/* Driver: Enter Costs */}
       {myCars.length > 0 && (
-        <section className="rounded-lg bg-white p-6 shadow">
+        <section className="mb-8 rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-lg font-semibold">Enter Daily Costs</h2>
           <CostForm cars={myCars.map((c) => ({ id: c.id, name: c.name }))} />
         </section>
+      )}
+
+      {/* Admin Panels */}
+      {isAdmin && (
+        <>
+          <section className="mb-8 rounded-lg border-2 border-red-200 bg-white p-6 shadow">
+            <h2 className="mb-4 text-lg font-semibold text-red-700">
+              Admin: User Management
+            </h2>
+            <UserManagement
+              users={allUsers.map((u) => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                role: u.role,
+              }))}
+              currentUserId={userId}
+            />
+          </section>
+
+          <section className="rounded-lg border-2 border-red-200 bg-white p-6 shadow">
+            <h2 className="mb-4 text-lg font-semibold text-red-700">
+              Admin: Operating Days
+            </h2>
+            <DateManagement
+              disabledDates={disabledDates.map((d) => ({
+                id: d.id,
+                date: d.date.toISOString().split("T")[0],
+                reason: d.reason,
+              }))}
+            />
+          </section>
+        </>
       )}
     </main>
   );

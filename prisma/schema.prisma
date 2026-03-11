@@ -7,12 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  PENDING
+  USER
+  ADMIN
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  role          Role      @default(PENDING)
   accounts      Account[]
   sessions      Session[]
   cars          Car[]     @relation("OwnedCars")
@@ -97,4 +104,10 @@ model DailyCost {
   updatedAt   DateTime @updatedAt
 
   @@unique([carId, date])
+}
+
+model DisabledDate {
+  id     String   @id @default(cuid())
+  date   DateTime @unique @db.Date
+  reason String?
 }
