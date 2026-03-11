@@ -1,5 +1,4 @@
 import { SignIn } from "@clerk/nextjs";
-import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function SignInPage() {
@@ -11,15 +10,7 @@ export default function SignInPage() {
         </Link>
         <p className="mt-2 text-gray-500">Sign in to track your rides</p>
       </div>
-      <ClerkLoading>
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-          <p className="text-sm text-gray-400">Loading...</p>
-        </div>
-      </ClerkLoading>
-      <ClerkLoaded>
-        <SignIn afterSignOutUrl="/" />
-      </ClerkLoaded>
+      <SignIn afterSignOutUrl="/" />
     </main>
   );
 }
