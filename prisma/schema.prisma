@@ -24,6 +24,7 @@ model User {
   sessions      Session[]
   ownedCars     Car[]     @relation("OwnedCars")
   trips         Trip[]
+  payments      Payment[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -70,6 +71,7 @@ model Car {
   owner        User        @relation("OwnedCars", fields: [ownerId], references: [id], onDelete: Cascade)
   trips        Trip[]
   dailyCosts   DailyCost[]
+  payments     Payment[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 }
@@ -104,6 +106,21 @@ model DailyCost {
   updatedAt   DateTime @updatedAt
 
   @@unique([carId, date])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  userId    String
+  carId     String
+  amount    Float
+  note      String?
+  date      DateTime @db.Date
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([carId])
 }
 
 model DisabledDate {

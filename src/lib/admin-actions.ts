@@ -157,3 +157,65 @@ export async function isSystemPaused(): Promise<boolean> {
   });
   return config?.value === "true";
 }
+
+// ---------------------------------------------------------------------------
+// Payment / Debt Settlement
+// ---------------------------------------------------------------------------
+
+/** Record a payment (partial or full) for a user toward a specific car */
+export async function recordPayment(
+  userId: string,
+  carId: string,
+  amount: number,
+  note?: string
+) {
+  await requireAdmin();
+
+  if (amount <= 0) {
+    throw new Error("Payment amount must be positive");
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  await prisma.payment.create({
+    data: {
+      userId,
+      carId,
+      amount,
+      note: note || null,
+      date: today,
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
+/** Clear the full pending balance for a user by creating a payment for the exact amount */
+export async function clearFullBalance(userId: string, carId: string) {
+  await requireAdmin();
+
+  const { calculateUserPendingDebt } = await import("@/lib/cost-splitting");
+  const pendingDebt = await calculateUserPendingDebt(userId);
+
+  if (pendingDebt <= 0) {
+    throw new Error("User has no pending debt");
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  await prisma.payment.create({
+    data: {
+      userId,
+      carId,
+      amount: pendingDebt,
+      note: "Full balance cleared",
+      date: today,
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}

@@ -2,11 +2,13 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import UserManagement from "./user-management";
 import DateManagement from "./date-management";
 import CostManagement from "./cost-management";
 import SystemPauseToggle from "./system-pause-toggle";
+import DebtSettlement from "./debt-settlement";
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
@@ -18,8 +20,12 @@ export default async function AdminPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
   // Fetch all data in parallel
-  const [allUsers, disabledDates, myCars, systemPausedConfig] =
+  const [allUsers, disabledDates, myCars, systemPausedConfig, debts] =
     await Promise.all([
       prisma.user.findMany({
         select: { id: true, name: true, email: true, role: true },
@@ -36,6 +42,7 @@ export default async function AdminPage() {
       prisma.systemConfig.findUnique({
         where: { key: "system_paused" },
       }),
+      calculateDebts(startOfMonth, endOfMonth),
     ]);
 
   const isSystemPaused = systemPausedConfig?.value === "true";
@@ -109,6 +116,23 @@ export default async function AdminPage() {
           />
         </section>
       )}
+
+      {/* Debt Settlement */}
+      <section className="mb-8 rounded-lg border-2 border-green-200 bg-white p-6 shadow">
+        <h2 className="mb-4 text-lg font-semibold text-green-700">
+          Debt Settlement
+        </h2>
+        <DebtSettlement
+          debts={debts.map((d) => ({
+            userId: d.userId,
+            userName: d.userName,
+            pendingDebt: d.pendingDebt,
+            totalDebt: d.totalDebt,
+            totalPaid: d.totalPaid,
+          }))}
+          cars={myCars.map((c) => ({ id: c.id, name: c.name }))}
+        />
+      </section>
 
       {/* Date / System Configuration */}
       <section className="rounded-lg border-2 border-red-200 bg-white p-6 shadow">
