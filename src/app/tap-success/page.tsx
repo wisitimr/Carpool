@@ -9,47 +9,89 @@ function TapResult() {
   const status = searchParams.get("status");
   const type = searchParams.get("type");
   const car = searchParams.get("car");
-
   const reason = searchParams.get("reason");
 
-  const messages: Record<string, { title: string; description: string; icon: string }> = {
+  const messages: Record<
+    string,
+    { title: string; description: string; color: string; icon: React.ReactNode }
+  > = {
     recorded: {
       title: "Ride Logged!",
       description: `Your ${type} ride in ${car ?? "the car"} has been recorded.`,
-      icon: "\u2705",
+      color: "green",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
     },
     already_recorded: {
       title: "Already Recorded",
       description: `Your ride in ${car ?? "the car"} was already logged. No duplicate created.`,
-      icon: "\u2139\uFE0F",
+      color: "blue",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
     },
     too_soon: {
       title: "Too Soon for Evening",
       description: `Not enough time has passed since your morning tap in ${car ?? "the car"}. Try again later.`,
-      icon: "\u2139\uFE0F",
+      color: "amber",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
     },
     disabled: {
       title: "System Disabled",
       description: reason ?? "The carpool system is disabled for today.",
-      icon: "\u26D4",
+      color: "red",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+      ),
     },
   };
 
   const msg = messages[status ?? ""] ?? {
     title: "Tap Received",
     description: "Your tap has been processed.",
-    icon: "\u2139\uFE0F",
+    color: "blue",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  };
+
+  const bgMap: Record<string, string> = {
+    green: "bg-green-50",
+    blue: "bg-blue-50",
+    amber: "bg-amber-50",
+    red: "bg-red-50",
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 text-center shadow-lg">
-        <div className="mb-4 text-5xl">{msg.icon}</div>
-        <h1 className="mb-2 text-2xl font-bold">{msg.title}</h1>
-        <p className="mb-6 text-gray-600">{msg.description}</p>
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
+      <div className="w-full max-w-sm overflow-hidden rounded-2xl bg-white p-8 text-center shadow-lg ring-1 ring-gray-100">
+        <div
+          className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${bgMap[msg.color] ?? "bg-blue-50"}`}
+        >
+          {msg.icon}
+        </div>
+        <h1 className="mt-5 text-2xl font-bold tracking-tight text-gray-900">
+          {msg.title}
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-gray-500">
+          {msg.description}
+        </p>
         <Link
           href="/dashboard"
-          className="text-blue-600 underline hover:text-blue-800"
+          className="mt-6 inline-block rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"
         >
           Go to Dashboard
         </Link>
@@ -63,7 +105,7 @@ export default function TapSuccessPage() {
     <Suspense
       fallback={
         <main className="flex min-h-screen items-center justify-center">
-          <p>Loading...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
         </main>
       }
     >
