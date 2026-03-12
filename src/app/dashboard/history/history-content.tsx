@@ -22,6 +22,7 @@ interface PaymentRecord {
   carName: string;
   date: string;
   dateISO: string;
+  paidAt: string;
   amount: number;
   note: string | null;
 }
@@ -89,6 +90,7 @@ interface HistoryContentProps {
     people: string;
     splitAmong: string;
     passenger: string;
+    paidDate: string;
   };
 }
 
@@ -1097,6 +1099,10 @@ export default function HistoryContent({
                               <span>{t.amount}</span>
                               <span className="font-medium text-green-600">฿{p.amount.toFixed(2)}</span>
                             </div>
+                            <div className="mt-1 flex justify-between">
+                              <span>{t.paidDate}</span>
+                              <span className="text-gray-700">{p.paidAt}</span>
+                            </div>
                             {p.note && (
                               <div className="mt-1 flex justify-between">
                                 <span>{t.note}</span>
@@ -1118,6 +1124,7 @@ export default function HistoryContent({
                         <th className="w-6 pb-3"></th>
                         <th className="pb-3 font-semibold">{t.date}</th>
                         <th className="pb-3 font-semibold">{t.car}</th>
+                        <th className="pb-3 font-semibold">{t.paidDate}</th>
                         <th className="pb-3 text-right font-semibold">{t.amount}</th>
                       </tr>
                     </thead>
@@ -1143,13 +1150,14 @@ export default function HistoryContent({
                               </td>
                               <td className="py-3 text-gray-700">{fmtDate(p.dateISO, locale)}</td>
                               <td className="py-3 font-medium text-gray-800">{p.carName}</td>
+                              <td className="py-3 text-gray-500">{p.paidAt}</td>
                               <td className="py-3 text-right font-semibold text-green-600">
                                 ฿{p.amount.toFixed(2)}
                               </td>
                             </tr>
                             {isExpanded && p.note && (
                                 <tr>
-                                  <td colSpan={4} className="pb-3 pt-0">
+                                  <td colSpan={5} className="pb-3 pt-0">
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
                                       <span>
                                         <span className="font-medium text-gray-600">{t.note}:</span> {p.note}
