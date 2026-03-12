@@ -59,7 +59,7 @@ export default async function AdminPage() {
           </a>
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
-              {t.adminDashboard}
+              {t.settings}
             </h1>
             <p className="mt-0.5 text-sm text-gray-500">
               {user.name ?? user.email}

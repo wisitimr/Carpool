@@ -144,12 +144,12 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                 </div>
 
                 {isExpanded && !isMe && (
-                  <div className="mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
+                  <div className="mt-2 flex gap-2 border-t border-gray-100 pt-2">
                     <select
                       value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
                       disabled={isAnyLoading}
-                      className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
+                      className="flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
                     >
                       <option value="USER">USER</option>
                       <option value="ADMIN">ADMIN</option>
@@ -158,7 +158,7 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                       <button
                         onClick={() => handleRevoke(user.id)}
                         disabled={isAnyLoading}
-                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                        className="flex-1 rounded-lg border border-red-300 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
                       >
                         {t.revoke}{loadingAction === `revoke-${user.id}` && "..."}
                       </button>

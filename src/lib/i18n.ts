@@ -73,7 +73,7 @@ const translations = {
     viewAll: "View All",
 
     // Admin
-    adminDashboard: "Admin Dashboard",
+    settings: "Settings",
     qrCode: "QR Code",
     userManagement: "User Management",
     pendingApproval: "Pending Approval",
@@ -207,7 +207,7 @@ const translations = {
     viewAll: "ดูทั้งหมด",
 
     // Admin
-    adminDashboard: "แดชบอร์ดแอดมิน",
+    settings: "ตั้งค่า",
     qrCode: "QR Code",
     userManagement: "จัดการผู้ใช้",
     pendingApproval: "รอการอนุมัติ",
