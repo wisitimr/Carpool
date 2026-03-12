@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useT } from "@/lib/i18n-context";
 
 function fmtDate(iso: string, locale: string) {
@@ -33,6 +33,7 @@ function getBangkokToday() {
 
 export default function CostForm({ cars, existingCosts: initialCosts, missingCostDates: initialMissingDates = [] }: CostFormProps) {
   const { t, locale } = useT();
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
   const [date, setDate] = useState(getBangkokToday);
   const [existingCosts, setExistingCosts] = useState<ExistingCost[]>(initialCosts);
@@ -178,17 +179,23 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
         <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
           {t.date}
         </label>
-        <div className="relative">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => handleDateChange(e.target.value)}
-            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-          />
-          <div className={inputClass}>
-            {fmtDate(date, locale)}
-          </div>
-        </div>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={date}
+          onChange={(e) => handleDateChange(e.target.value)}
+          className="sr-only"
+          tabIndex={-1}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            try { dateInputRef.current?.showPicker(); } catch { dateInputRef.current?.focus(); }
+          }}
+          className={`${inputClass} text-left`}
+        >
+          {fmtDate(date, locale)}
+        </button>
       </div>
 
       {/* Car selector */}
