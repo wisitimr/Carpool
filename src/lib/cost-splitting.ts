@@ -74,12 +74,11 @@ export async function calculateDebts(
     }
 
     const distinctUsers = userTrips.size;
-    const totalTripUnits = Array.from(userTrips.values()).reduce((sum, u) => sum + u.count, 0);
 
     for (const [uid, info] of userTrips) {
-      // Gas: proportional to trip count (round trip pays 2x, one way pays 1x)
-      const gasShare = totalTripUnits > 0 ? (cost.gasCost * info.count) / totalTripUnits : 0;
-      // Parking: split equally per person
+      // Gas: per-trip cost (outbound+return = gasCost*2, one way = gasCost*1)
+      const gasShare = cost.gasCost * info.count;
+      // Parking: split equally among all riders that day
       const parkingShare = distinctUsers > 0 ? cost.parkingCost / distinctUsers : 0;
       const share = gasShare + parkingShare;
       const tripTypes = userTripTypes.get(uid) ?? { outbound: 0, return: 0 };
@@ -138,16 +137,20 @@ export async function calculateDebts(
 }
 
 /**
- * Calculate pending debt for a single user (all-time).
- * Used for the "Clear Full Balance" action.
+ * Calculate pending debt for a single user (all-time), broken down by date.
+ * Returns per-date shares sorted oldest-first, with already-paid amounts subtracted.
  */
-export async function calculateUserPendingDebt(userId: string): Promise<number> {
-  // Get all cost shares for this user
+export async function calculateUserPendingBreakdown(userId: string): Promise<{
+  totalPending: number;
+  perDate: { date: Date; amount: number }[];
+}> {
   const dailyCosts = await prisma.dailyCost.findMany({
     include: { car: true },
+    orderBy: { date: "asc" },
   });
 
-  let totalDebt = 0;
+  // Collect per-date shares (oldest first)
+  const dateShares: { date: Date; amount: number }[] = [];
 
   for (const cost of dailyCosts) {
     if (cost.gasCost === 0 && cost.parkingCost === 0) continue;
@@ -158,7 +161,6 @@ export async function calculateUserPendingDebt(userId: string): Promise<number> 
 
     if (trips.length === 0) continue;
 
-    // Count trips per user
     const userTrips = new Map<string, number>();
     for (const t of trips) {
       userTrips.set(t.userId, (userTrips.get(t.userId) ?? 0) + 1);
@@ -167,20 +169,45 @@ export async function calculateUserPendingDebt(userId: string): Promise<number> 
     const myTrips = userTrips.get(userId);
     if (!myTrips) continue;
 
-    const totalTripUnits = Array.from(userTrips.values()).reduce((sum, c) => sum + c, 0);
     const distinctUsers = userTrips.size;
 
-    const gasShare = totalTripUnits > 0 ? (cost.gasCost * myTrips) / totalTripUnits : 0;
+    // Gas: per-trip cost (outbound+return = gasCost*2, one way = gasCost*1)
+    const gasShare = cost.gasCost * myTrips;
+    // Parking: split equally among all riders that day
     const parkingShare = distinctUsers > 0 ? cost.parkingCost / distinctUsers : 0;
-    totalDebt += gasShare + parkingShare;
+    const share = Math.round((gasShare + parkingShare) * 100) / 100;
+
+    if (share > 0) {
+      dateShares.push({ date: cost.date, amount: share });
+    }
   }
 
-  // Subtract all payments
+  // Subtract payments from oldest dates first
   const paymentsAgg = await prisma.payment.aggregate({
     where: { userId },
     _sum: { amount: true },
   });
 
-  const totalPaid = paymentsAgg._sum.amount ?? 0;
-  return Math.round((totalDebt - totalPaid) * 100) / 100;
+  let remaining = paymentsAgg._sum.amount ?? 0;
+  const pending: { date: Date; amount: number }[] = [];
+
+  for (const entry of dateShares) {
+    if (remaining >= entry.amount) {
+      remaining = Math.round((remaining - entry.amount) * 100) / 100;
+    } else if (remaining > 0) {
+      pending.push({
+        date: entry.date,
+        amount: Math.round((entry.amount - remaining) * 100) / 100,
+      });
+      remaining = 0;
+    } else {
+      pending.push(entry);
+    }
+  }
+
+  const totalPending = pending.reduce((sum, e) => sum + e.amount, 0);
+  return {
+    totalPending: Math.round(totalPending * 100) / 100,
+    perDate: pending,
+  };
 }

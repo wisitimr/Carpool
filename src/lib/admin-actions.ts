@@ -217,16 +217,40 @@ export async function recordPayment(
     throw new Error("Payment amount must be positive");
   }
 
-  const today = todayBangkok();
+  const { calculateUserPendingBreakdown } = await import("@/lib/cost-splitting");
+  const result = await calculateUserPendingBreakdown(userId);
 
-  await prisma.payment.create({
-    data: {
+  // Distribute payment across dates oldest-first
+  let remaining = amount;
+  const payments: { date: Date; amount: number }[] = [];
+
+  for (const entry of result.perDate) {
+    if (remaining <= 0) break;
+    const pay = Math.min(remaining, entry.amount);
+    payments.push({ date: entry.date, amount: Math.round(pay * 100) / 100 });
+    remaining = Math.round((remaining - pay) * 100) / 100;
+  }
+
+  // If amount exceeds total pending, put remainder on the latest date
+  if (remaining > 0) {
+    const lastDate = result.perDate.length > 0
+      ? result.perDate[result.perDate.length - 1].date
+      : todayBangkok();
+    if (payments.length > 0 && payments[payments.length - 1].date.getTime() === lastDate.getTime()) {
+      payments[payments.length - 1].amount += remaining;
+    } else {
+      payments.push({ date: lastDate, amount: remaining });
+    }
+  }
+
+  await prisma.payment.createMany({
+    data: payments.map((p) => ({
       userId,
       carId,
-      amount,
+      amount: p.amount,
       note: note || null,
-      date: today,
-    },
+      date: p.date,
+    })),
   });
 
   revalidatePath("/admin");
@@ -237,23 +261,22 @@ export async function recordPayment(
 export async function clearFullBalance(userId: string, carId: string) {
   await requireAdmin();
 
-  const { calculateUserPendingDebt } = await import("@/lib/cost-splitting");
-  const pendingDebt = await calculateUserPendingDebt(userId);
+  const { calculateUserPendingBreakdown } = await import("@/lib/cost-splitting");
+  const result = await calculateUserPendingBreakdown(userId);
 
-  if (pendingDebt <= 0) {
+  if (result.totalPending <= 0) {
     throw new Error("User has no pending debt");
   }
 
-  const today = todayBangkok();
-
-  await prisma.payment.create({
-    data: {
+  // Create one payment per cost date
+  await prisma.payment.createMany({
+    data: result.perDate.map((entry) => ({
       userId,
       carId,
-      amount: pendingDebt,
+      amount: entry.amount,
       note: "Full balance cleared",
-      date: today,
-    },
+      date: entry.date,
+    })),
   });
 
   revalidatePath("/admin");
