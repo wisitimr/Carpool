@@ -35,9 +35,14 @@ export default async function QRPage({
         >
           {t.back}
         </a>
-        <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
-          {t.qrCodeCheckin}
-        </h1>
+        <div className="text-center">
+          <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
+            {t.qrCodeCheckin}
+          </h1>
+          <p className="mt-0.5 text-sm text-gray-500">
+            {t.qrDescription}
+          </p>
+        </div>
       </header>
 
       <div className="animate-fade-in-up">

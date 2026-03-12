@@ -5,7 +5,7 @@ import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import { headers } from "next/headers";
 import { detectLocale, getTranslations } from "@/lib/i18n";
-import { nowBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
+import { nowBangkok, todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
 import HistoryContent from "./history-content";
 
 export default async function HistoryPage() {
@@ -19,17 +19,22 @@ export default async function HistoryPage() {
 
   const userId = user.id;
   const now = nowBangkok();
+  const today = todayBangkok();
   const startOfMonth = startOfMonthBangkok();
   const endOfMonth = endOfMonthBangkok();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const endOfYear = new Date(now.getFullYear(), 11, 31);
 
-  const [recentTrips, debts, myPayments] = await Promise.all([
+  const [recentTrips, dayDebts, monthDebts, yearDebts, myPayments] = await Promise.all([
     prisma.trip.findMany({
       where: { userId },
       include: { car: true },
       orderBy: { tappedAt: "desc" },
       take: 50,
     }),
+    calculateDebts(today, today),
     calculateDebts(startOfMonth, endOfMonth),
+    calculateDebts(startOfYear, endOfYear),
     prisma.payment.findMany({
       where: { userId },
       include: { car: true },
@@ -57,15 +62,18 @@ export default async function HistoryPage() {
     note: p.note,
   }));
 
-  const debtData = debts.map((d) => ({
-    userId: d.userId,
-    userName: d.userName,
-    totalDebt: d.totalDebt,
-    totalPaid: d.totalPaid,
-    pendingDebt: d.pendingDebt,
-  }));
+  const serializeDebts = (debts: typeof dayDebts) =>
+    debts.map((d) => ({
+      userId: d.userId,
+      userName: d.userName,
+      totalDebt: d.totalDebt,
+      totalPaid: d.totalPaid,
+      pendingDebt: d.pendingDebt,
+    }));
 
   const monthLabel = now.toLocaleString(locale, { month: "long" });
+  const todayLabel = today.toLocaleDateString(locale);
+  const yearLabel = String(now.getFullYear());
 
   return (
     <main className="mx-auto max-w-3xl px-4 pb-8 pt-6 sm:px-6 sm:pt-8">
@@ -84,16 +92,25 @@ export default async function HistoryPage() {
       <HistoryContent
         trips={trips}
         payments={payments}
-        debts={debtData}
+        dayDebts={serializeDebts(dayDebts)}
+        monthDebts={serializeDebts(monthDebts)}
+        yearDebts={serializeDebts(yearDebts)}
         currentUserId={userId}
+        todayLabel={todayLabel}
         monthLabel={monthLabel}
+        yearLabel={yearLabel}
         t={{
           trips: t.trips,
           payments: t.payments,
-          monthlySummary: t.monthlySummary,
+          summary: t.summary,
+          day: t.day,
+          month: t.month,
+          year: t.year,
           noTripHistory: t.noTripHistory,
           noPayments: t.noPayments,
+          noCostsToday: t.noCostsToday,
           noCostsThisMonth: t.noCostsThisMonth,
+          noCostsThisYear: t.noCostsThisYear,
           date: t.date,
           time: t.time,
           car: t.car,

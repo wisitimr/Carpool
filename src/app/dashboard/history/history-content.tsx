@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Tab = "trips" | "payments" | "summary";
+type SummaryPeriod = "day" | "month" | "year";
 
 interface Trip {
   id: string;
@@ -31,16 +32,25 @@ interface DebtSummary {
 interface HistoryContentProps {
   trips: Trip[];
   payments: Payment[];
-  debts: DebtSummary[];
+  dayDebts: DebtSummary[];
+  monthDebts: DebtSummary[];
+  yearDebts: DebtSummary[];
   currentUserId: string;
+  todayLabel: string;
   monthLabel: string;
+  yearLabel: string;
   t: {
     trips: string;
     payments: string;
-    monthlySummary: string;
+    summary: string;
+    day: string;
+    month: string;
+    year: string;
     noTripHistory: string;
     noPayments: string;
+    noCostsToday: string;
     noCostsThisMonth: string;
+    noCostsThisYear: string;
     date: string;
     time: string;
     car: string;
@@ -92,23 +102,139 @@ function useInfiniteScroll<T>(items: T[]) {
   };
 }
 
+function DebtTable({
+  debts,
+  currentUserId,
+  emptyMessage,
+  label,
+  t,
+}: {
+  debts: DebtSummary[];
+  currentUserId: string;
+  emptyMessage: string;
+  label: string;
+  t: HistoryContentProps["t"];
+}) {
+  if (debts.length === 0) {
+    return <p className="text-sm text-gray-400">{emptyMessage}</p>;
+  }
+
+  return (
+    <>
+      <p className="mb-3 text-xs font-medium text-gray-500">{label}</p>
+      {/* Mobile */}
+      <div className="space-y-2 sm:hidden">
+        {debts.map((d) => (
+          <div
+            key={d.userId}
+            className={`rounded-xl px-4 py-3 ${
+              d.userId === currentUserId
+                ? "bg-blue-50 ring-1 ring-blue-200"
+                : "bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-gray-800">
+                {d.userName ?? "Unknown"}
+                {d.userId === currentUserId && (
+                  <span className="ml-1.5 text-xs font-normal text-blue-500">
+                    ({t.you})
+                  </span>
+                )}
+              </p>
+              <p className="font-bold text-red-600">
+                ฿{d.pendingDebt.toFixed(2)}
+              </p>
+            </div>
+            <div className="mt-1 flex gap-3 text-xs text-gray-500">
+              <span>{t.accrued}: ฿{d.totalDebt.toFixed(2)}</span>
+              <span className="text-green-600">
+                {t.paid}: ฿{d.totalPaid.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop */}
+      <div className="hidden sm:block">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+              <th className="pb-3 font-semibold">{t.passenger}</th>
+              <th className="pb-3 text-right font-semibold">{t.accrued}</th>
+              <th className="pb-3 text-right font-semibold">{t.paid}</th>
+              <th className="pb-3 text-right font-semibold">{t.pending}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {debts.map((d) => (
+              <tr
+                key={d.userId}
+                className={`${d.userId === currentUserId ? "bg-blue-50/60 font-semibold" : "hover:bg-gray-50/50"}`}
+              >
+                <td className="py-3 text-gray-800">
+                  {d.userName ?? "Unknown"}
+                  {d.userId === currentUserId && (
+                    <span className="ml-1.5 text-xs font-normal text-blue-500">
+                      ({t.you})
+                    </span>
+                  )}
+                </td>
+                <td className="py-3 text-right text-gray-700">
+                  ฿{d.totalDebt.toFixed(2)}
+                </td>
+                <td className="py-3 text-right text-green-600">
+                  ฿{d.totalPaid.toFixed(2)}
+                </td>
+                <td className="py-3 text-right text-red-600">
+                  ฿{d.pendingDebt.toFixed(2)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
 export default function HistoryContent({
   trips,
   payments,
-  debts,
+  dayDebts,
+  monthDebts,
+  yearDebts,
   currentUserId,
+  todayLabel,
   monthLabel,
+  yearLabel,
   t,
 }: HistoryContentProps) {
   const [activeTab, setActiveTab] = useState<Tab>("trips");
+  const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>("month");
   const tripScroll = useInfiniteScroll(trips);
   const paymentScroll = useInfiniteScroll(payments);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "trips", label: t.trips },
     { key: "payments", label: t.payments },
-    { key: "summary", label: t.monthlySummary },
+    { key: "summary", label: t.summary },
   ];
+
+  const summaryPeriods: { key: SummaryPeriod; label: string }[] = [
+    { key: "day", label: t.day },
+    { key: "month", label: t.month },
+    { key: "year", label: t.year },
+  ];
+
+  const summaryData = {
+    day: { debts: dayDebts, empty: t.noCostsToday, label: todayLabel },
+    month: { debts: monthDebts, empty: t.noCostsThisMonth, label: monthLabel },
+    year: { debts: yearDebts, empty: t.noCostsThisYear, label: yearLabel },
+  };
+
+  const current = summaryData[summaryPeriod];
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -274,94 +400,34 @@ export default function HistoryContent({
         </section>
       )}
 
-      {/* Monthly Summary tab */}
+      {/* Summary tab */}
       {activeTab === "summary" && (
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
           <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-              {t.monthlySummary} &mdash; {monthLabel}
-            </h2>
+            <div className="flex gap-1.5">
+              {summaryPeriods.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setSummaryPeriod(p.key)}
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
+                    summaryPeriod === p.key
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="px-5 py-4 sm:px-6 sm:py-5">
-            {debts.length === 0 ? (
-              <p className="text-sm text-gray-400">{t.noCostsThisMonth}</p>
-            ) : (
-              <>
-                {/* Mobile */}
-                <div className="space-y-2 sm:hidden">
-                  {debts.map((d) => (
-                    <div
-                      key={d.userId}
-                      className={`rounded-xl px-4 py-3 ${
-                        d.userId === currentUserId
-                          ? "bg-blue-50 ring-1 ring-blue-200"
-                          : "bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-800">
-                          {d.userName ?? "Unknown"}
-                          {d.userId === currentUserId && (
-                            <span className="ml-1.5 text-xs font-normal text-blue-500">
-                              ({t.you})
-                            </span>
-                          )}
-                        </p>
-                        <p className="font-bold text-red-600">
-                          ฿{d.pendingDebt.toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="mt-1 flex gap-3 text-xs text-gray-500">
-                        <span>{t.accrued}: ฿{d.totalDebt.toFixed(2)}</span>
-                        <span className="text-green-600">
-                          {t.paid}: ฿{d.totalPaid.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop */}
-                <div className="hidden sm:block">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
-                        <th className="pb-3 font-semibold">{t.passenger}</th>
-                        <th className="pb-3 text-right font-semibold">{t.accrued}</th>
-                        <th className="pb-3 text-right font-semibold">{t.paid}</th>
-                        <th className="pb-3 text-right font-semibold">{t.pending}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {debts.map((d) => (
-                        <tr
-                          key={d.userId}
-                          className={`${d.userId === currentUserId ? "bg-blue-50/60 font-semibold" : "hover:bg-gray-50/50"}`}
-                        >
-                          <td className="py-3 text-gray-800">
-                            {d.userName ?? "Unknown"}
-                            {d.userId === currentUserId && (
-                              <span className="ml-1.5 text-xs font-normal text-blue-500">
-                                ({t.you})
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 text-right text-gray-700">
-                            ฿{d.totalDebt.toFixed(2)}
-                          </td>
-                          <td className="py-3 text-right text-green-600">
-                            ฿{d.totalPaid.toFixed(2)}
-                          </td>
-                          <td className="py-3 text-right text-red-600">
-                            ฿{d.pendingDebt.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
+            <DebtTable
+              debts={current.debts}
+              currentUserId={currentUserId}
+              emptyMessage={current.empty}
+              label={current.label}
+              t={t}
+            />
           </div>
         </section>
       )}
