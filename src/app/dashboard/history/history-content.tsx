@@ -17,6 +17,7 @@ interface Trip {
 interface PaymentRecord {
   id: string;
   userId: string;
+  userName: string | null;
   carName: string;
   date: string;
   dateISO: string;
@@ -27,6 +28,10 @@ interface PaymentRecord {
 interface BreakdownEntry {
   date: string; // ISO date
   share: number;
+  gasShare: number;
+  parkingShare: number;
+  outboundCount: number;
+  returnCount: number;
 }
 
 interface DebtWithBreakdown {
@@ -67,6 +72,8 @@ interface HistoryContentProps {
     return: string;
     note: string;
     amount: string;
+    gas: string;
+    parking: string;
     accrued: string;
     paid: string;
     pending: string;
@@ -478,6 +485,20 @@ export default function HistoryContent({
     });
   };
 
+  // Build lookup: userId+date -> breakdown entries for payment detail view
+  const breakdownLookup = useMemo(() => {
+    const map = new Map<string, BreakdownEntry[]>();
+    for (const debt of allDebts) {
+      for (const b of debt.breakdown) {
+        const key = `${debt.userId}:${b.date}`;
+        const arr = map.get(key) ?? [];
+        arr.push(b);
+        map.set(key, arr);
+      }
+    }
+    return map;
+  }, [allDebts]);
+
   const hasTripFilter = tripDateFrom !== "" || tripDateTo !== "";
   const hasPaymentFilter = payDateFrom !== "" || payDateTo !== "";
 
@@ -730,24 +751,53 @@ export default function HistoryContent({
                             </svg>
                           </div>
                         </button>
-                        {isExpanded && (
-                          <div className="border-t border-gray-100 px-4 pb-3 pt-2 text-xs text-gray-500">
-                            <div className="flex justify-between">
-                              <span>{t.car}</span>
-                              <span className="text-gray-700">{p.carName}</span>
-                            </div>
-                            <div className="mt-1 flex justify-between">
-                              <span>{t.amount}</span>
-                              <span className="font-medium text-green-600">฿{p.amount.toFixed(2)}</span>
-                            </div>
-                            {p.note && (
-                              <div className="mt-1 flex justify-between">
-                                <span>{t.note}</span>
-                                <span className="text-gray-700">{p.note}</span>
+                        {isExpanded && (() => {
+                          const entries = breakdownLookup.get(`${p.userId}:${p.dateISO}`) ?? [];
+                          const totalGas = entries.reduce((s, e) => s + e.gasShare, 0);
+                          const totalParking = entries.reduce((s, e) => s + e.parkingShare, 0);
+                          const totalOutbound = entries.reduce((s, e) => s + e.outboundCount, 0);
+                          const totalReturn = entries.reduce((s, e) => s + e.returnCount, 0);
+                          return (
+                            <div className="border-t border-gray-100 px-4 pb-3 pt-2 text-xs text-gray-500">
+                              <div className="flex justify-between">
+                                <span>{t.car}</span>
+                                <span className="text-gray-700">{p.carName}</span>
                               </div>
-                            )}
-                          </div>
-                        )}
+                              {(totalOutbound > 0 || totalReturn > 0) && (
+                                <div className="mt-1 flex justify-between">
+                                  <span>{t.type}</span>
+                                  <span className="text-gray-700">
+                                    {totalOutbound > 0 && <span className="text-amber-700">{t.outbound} ({totalOutbound})</span>}
+                                    {totalOutbound > 0 && totalReturn > 0 && " · "}
+                                    {totalReturn > 0 && <span className="text-indigo-700">{t.return} ({totalReturn})</span>}
+                                  </span>
+                                </div>
+                              )}
+                              {totalGas > 0 && (
+                                <div className="mt-1 flex justify-between">
+                                  <span>{t.gas}</span>
+                                  <span className="text-gray-700">฿{totalGas.toFixed(2)}</span>
+                                </div>
+                              )}
+                              {totalParking > 0 && (
+                                <div className="mt-1 flex justify-between">
+                                  <span>{t.parking}</span>
+                                  <span className="text-gray-700">฿{totalParking.toFixed(2)}</span>
+                                </div>
+                              )}
+                              <div className="mt-1 flex justify-between">
+                                <span>{t.amount}</span>
+                                <span className="font-medium text-green-600">฿{p.amount.toFixed(2)}</span>
+                              </div>
+                              {p.note && (
+                                <div className="mt-1 flex justify-between">
+                                  <span>{t.note}</span>
+                                  <span className="text-gray-700">{p.note}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}
@@ -790,16 +840,43 @@ export default function HistoryContent({
                                 ฿{p.amount.toFixed(2)}
                               </td>
                             </tr>
-                            {isExpanded && (
-                              <tr>
-                                <td colSpan={4} className="pb-3 pt-0">
-                                  <div className="rounded-lg bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
-                                    <span className="font-medium text-gray-600">{t.note}:</span>{" "}
-                                    {p.note ?? <span className="italic text-gray-400">&mdash;</span>}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
+                            {isExpanded && (() => {
+                              const entries = breakdownLookup.get(`${p.userId}:${p.dateISO}`) ?? [];
+                              const totalGas = entries.reduce((s, e) => s + e.gasShare, 0);
+                              const totalParking = entries.reduce((s, e) => s + e.parkingShare, 0);
+                              const totalOutbound = entries.reduce((s, e) => s + e.outboundCount, 0);
+                              const totalReturn = entries.reduce((s, e) => s + e.returnCount, 0);
+                              return (
+                                <tr>
+                                  <td colSpan={4} className="pb-3 pt-0">
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
+                                      {(totalOutbound > 0 || totalReturn > 0) && (
+                                        <span>
+                                          {totalOutbound > 0 && <span className="text-amber-700">{t.outbound} ({totalOutbound})</span>}
+                                          {totalOutbound > 0 && totalReturn > 0 && " · "}
+                                          {totalReturn > 0 && <span className="text-indigo-700">{t.return} ({totalReturn})</span>}
+                                        </span>
+                                      )}
+                                      {totalGas > 0 && (
+                                        <span>
+                                          <span className="font-medium text-gray-600">{t.gas}:</span> ฿{totalGas.toFixed(2)}
+                                        </span>
+                                      )}
+                                      {totalParking > 0 && (
+                                        <span>
+                                          <span className="font-medium text-gray-600">{t.parking}:</span> ฿{totalParking.toFixed(2)}
+                                        </span>
+                                      )}
+                                      {p.note && (
+                                        <span>
+                                          <span className="font-medium text-gray-600">{t.note}:</span> {p.note}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })()}
                           </Fragment>
                         );
                       })}

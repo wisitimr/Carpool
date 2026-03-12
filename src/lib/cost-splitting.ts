@@ -11,6 +11,10 @@ export interface UserDebt {
     carName: string;
     date: Date;
     share: number;
+    gasShare: number;
+    parkingShare: number;
+    outboundCount: number;
+    returnCount: number;
     totalCost: number;
     passengerCount: number;
   }[];
@@ -60,6 +64,15 @@ export async function calculateDebts(
       }
     }
 
+    // Count outbound/return per user
+    const userTripTypes = new Map<string, { outbound: number; return: number }>();
+    for (const trip of trips) {
+      const existing = userTripTypes.get(trip.userId) ?? { outbound: 0, return: 0 };
+      if (trip.type === "OUTBOUND") existing.outbound++;
+      else existing.return++;
+      userTripTypes.set(trip.userId, existing);
+    }
+
     const distinctUsers = userTrips.size;
     const totalTripUnits = Array.from(userTrips.values()).reduce((sum, u) => sum + u.count, 0);
 
@@ -69,6 +82,7 @@ export async function calculateDebts(
       // Parking: split equally per person
       const parkingShare = distinctUsers > 0 ? cost.parkingCost / distinctUsers : 0;
       const share = gasShare + parkingShare;
+      const tripTypes = userTripTypes.get(uid) ?? { outbound: 0, return: 0 };
 
       let entry = debtMap.get(uid);
       if (!entry) {
@@ -89,6 +103,10 @@ export async function calculateDebts(
         carName: cost.car.name,
         date: cost.date,
         share: Math.round(share * 100) / 100,
+        gasShare: Math.round(gasShare * 100) / 100,
+        parkingShare: Math.round(parkingShare * 100) / 100,
+        outboundCount: tripTypes.outbound,
+        returnCount: tripTypes.return,
         totalCost: cost.gasCost + cost.parkingCost,
         passengerCount: distinctUsers,
       });

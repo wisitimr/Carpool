@@ -28,15 +28,11 @@ export default async function DashboardPage() {
 
   const today = todayBangkok();
 
-  const [myCars, todaysTrips, recentTrips, debts] =
+  const [myCars, recentTrips, debts] =
     await Promise.all([
       prisma.car.findMany({
         where: { ownerId: userId },
         select: { id: true, name: true, defaultGasCost: true },
-      }),
-      prisma.trip.findMany({
-        where: { userId, date: today },
-        include: { car: true },
       }),
       prisma.trip.findMany({
         where: { userId },
@@ -144,21 +140,27 @@ export default async function DashboardPage() {
                 <p className="text-3xl font-extrabold tracking-tight text-red-600 sm:text-4xl">
                   ฿{myDebt.pendingDebt.toFixed(2)}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-500">
-                  <span>
-                    {t.accrued}{" "}
-                    <span className="font-medium text-gray-700">
-                      ฿{myDebt.totalDebt.toFixed(2)}
-                    </span>
-                  </span>
-                  <span>&middot;</span>
-                  <span>
-                    {t.paid}{" "}
-                    <span className="font-medium text-green-600">
-                      ฿{myDebt.totalPaid.toFixed(2)}
-                    </span>
-                  </span>
-                </div>
+
+                {myDebt.breakdown.length > 0 && (
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700">
+                      {t.viewCostBreakdown}
+                    </summary>
+                    <ul className="mt-3 divide-y divide-gray-100 text-sm">
+                      {myDebt.breakdown.map((b, i) => (
+                        <li key={i} className="flex items-center justify-between gap-3 py-2.5">
+                          <span className="min-w-0 truncate text-gray-600">
+                            {b.carName} &mdash;{" "}
+                            {b.date.toLocaleDateString(locale)} ({b.passengerCount} {t.riders})
+                          </span>
+                          <span className="shrink-0 font-medium text-gray-900">
+                            ฿{b.share.toFixed(2)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
               </div>
             ) : (
               <p className="text-2xl font-extrabold tracking-tight text-green-600 sm:text-3xl">
@@ -168,71 +170,14 @@ export default async function DashboardPage() {
                 </span>
               </p>
             )}
-
-            {myDebt && myDebt.breakdown.length > 0 && (
-              <details className="mt-4">
-                <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700">
-                  {t.viewCostBreakdown}
-                </summary>
-                <ul className="mt-3 divide-y divide-gray-100 text-sm">
-                  {myDebt.breakdown.map((b, i) => (
-                    <li key={i} className="flex items-center justify-between gap-3 py-2.5">
-                      <span className="min-w-0 truncate text-gray-600">
-                        {b.carName} &mdash;{" "}
-                        {b.date.toLocaleDateString(locale)} ({b.passengerCount} {t.riders})
-                      </span>
-                      <span className="shrink-0 font-medium text-gray-900">
-                        ฿{b.share.toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
           </div>
         </section>
 
-        {/* Today's Rides */}
+        {/* Recent */}
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
           <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-              {t.todaysRides}
-            </h2>
-          </div>
-          <div className="px-5 py-4 sm:px-6 sm:py-5">
-            {todaysTrips.length === 0 ? (
-              <p className="text-sm text-gray-400">{t.noRidesToday}</p>
-            ) : (
-              <ul className="space-y-2">
-                {todaysTrips.map((trip) => (
-                  <li
-                    key={trip.id}
-                    className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3"
-                  >
-                    <span className="font-medium text-gray-800">
-                      {trip.car.name}
-                    </span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        trip.type === "OUTBOUND"
-                          ? "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 ring-inset"
-                          : "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20 ring-inset"
-                      }`}
-                    >
-                      {trip.type === "OUTBOUND" ? t.outbound : t.return}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        {/* History Preview */}
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-              {t.history}
+              {t.recent}
             </h2>
           </div>
           <div className="px-5 py-4 sm:px-6 sm:py-5">

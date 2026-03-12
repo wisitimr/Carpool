@@ -58,12 +58,17 @@ export default async function HistoryPage() {
     breakdown: d.breakdown.map((b) => ({
       date: b.date.toISOString().split("T")[0],
       share: b.share,
+      gasShare: b.gasShare,
+      parkingShare: b.parkingShare,
+      outboundCount: b.outboundCount,
+      returnCount: b.returnCount,
     })),
   }));
 
   const serializedPayments = allPayments.map((p) => ({
     id: p.id,
     userId: p.userId,
+    userName: p.user.name,
     carName: p.car.name,
     date: p.date.toLocaleDateString(locale),
     dateISO: p.date.toISOString().split("T")[0],
@@ -107,6 +112,8 @@ export default async function HistoryPage() {
           outbound: t.outbound,
           return: t.return,
           note: t.note,
+          gas: t.gas,
+          parking: t.parking,
           amount: t.amount,
           accrued: t.accrued,
           paid: t.paid,
