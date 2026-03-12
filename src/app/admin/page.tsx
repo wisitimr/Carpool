@@ -48,8 +48,16 @@ export default async function AdminPage() {
     <main className="mx-auto max-w-4xl px-4 pb-8 pt-6 sm:px-6 sm:pt-8">
       {/* Header */}
       <header className="animate-fade-in mb-6 sm:mb-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
+        <div className="flex items-center gap-3">
+          <a
+            href="/dashboard"
+            className="shrink-0 rounded-xl bg-gray-900 p-2 text-white shadow-sm transition hover:bg-gray-800"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+          </a>
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
               {t.adminDashboard}
             </h1>
@@ -60,13 +68,7 @@ export default async function AdminPage() {
               </span>
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <a
-              href="/dashboard"
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 sm:px-4"
-            >
-              {t.dashboard}
-            </a>
+          <div className="shrink-0">
             <SignOutButton>
               <button className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 sm:px-4">
                 {t.signOut}
