@@ -73,10 +73,14 @@ export default function AdminQRCode({ cars, initialCarId }: AdminQRCodeProps) {
         <summary className="cursor-pointer text-gray-500 hover:underline">
           {t.viewTapUrl}
         </summary>
-        <div className="mt-2 flex items-start gap-2">
-          <code className="min-w-0 flex-1 break-all rounded-xl bg-gray-100 p-3 text-xs">
-            {tapUrl}
-          </code>
+        <div className="relative mt-2">
+          <input
+            type="text"
+            readOnly
+            value={tapUrl}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-3.5 pr-10 text-xs text-gray-700 shadow-sm focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:outline-none"
+            onFocus={(e) => e.target.select()}
+          />
           <button
             type="button"
             onClick={() => {
@@ -84,7 +88,7 @@ export default function AdminQRCode({ cars, initialCarId }: AdminQRCodeProps) {
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-            className="shrink-0 rounded-xl border border-gray-200 bg-white p-2.5 text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-700"
+            className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 transition hover:text-gray-600"
             title="Copy URL"
           >
             {copied ? (

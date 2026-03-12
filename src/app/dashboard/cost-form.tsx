@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useT } from "@/lib/i18n-context";
 
 interface ExistingCost {
@@ -14,13 +14,16 @@ interface CostFormProps {
   existingCosts: ExistingCost[];
 }
 
-export default function CostForm({ cars, existingCosts }: CostFormProps) {
+function getBangkokToday() {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+  return d.toISOString().split("T")[0];
+}
+
+export default function CostForm({ cars, existingCosts: initialCosts }: CostFormProps) {
   const { t } = useT();
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
-  const [date] = useState(() => {
-    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
-    return d.toISOString().split("T")[0];
-  });
+  const [date, setDate] = useState(getBangkokToday);
+  const [existingCosts, setExistingCosts] = useState<ExistingCost[]>(initialCosts);
 
   const existingForCar = existingCosts.find((c) => c.carId === carId);
 
@@ -35,21 +38,44 @@ export default function CostForm({ cars, existingCosts }: CostFormProps) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [editing, setEditing] = useState(!existingForCar);
 
-  function handleCarChange(newCarId: string) {
-    setCarId(newCarId);
-    const existing = existingCosts.find((c) => c.carId === newCarId);
+  const applyExistingCosts = useCallback((costs: ExistingCost[], selectedCarId: string) => {
+    const existing = costs.find((c) => c.carId === selectedCarId);
     if (existing) {
       setGasCost(existing.gasCost.toString());
       setParkingCost(existing.parkingCost.toString());
       setEditing(false);
-      setStatus("idle");
     } else {
-      const car = cars.find((c) => c.id === newCarId);
+      const car = cars.find((c) => c.id === selectedCarId);
       setGasCost(car?.defaultGasCost ? car.defaultGasCost.toString() : "");
       setParkingCost("");
       setEditing(true);
-      setStatus("idle");
     }
+    setStatus("idle");
+  }, [cars]);
+
+  async function fetchCostsForDate(newDate: string) {
+    try {
+      const carIds = cars.map((c) => c.id).join(",");
+      const res = await fetch(`/api/costs?date=${newDate}&carIds=${carIds}`);
+      if (res.ok) {
+        const costs: ExistingCost[] = await res.json();
+        setExistingCosts(costs);
+        return costs;
+      }
+    } catch { /* ignore */ }
+    setExistingCosts([]);
+    return [];
+  }
+
+  async function handleDateChange(newDate: string) {
+    setDate(newDate);
+    const costs = await fetchCostsForDate(newDate);
+    applyExistingCosts(costs, carId);
+  }
+
+  function handleCarChange(newCarId: string) {
+    setCarId(newCarId);
+    applyExistingCosts(existingCosts, newCarId);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -76,6 +102,11 @@ export default function CostForm({ cars, existingCosts }: CostFormProps) {
       if (!res.ok) throw new Error("Failed to save");
       setStatus("saved");
       setEditing(false);
+      // Update local existing costs
+      setExistingCosts((prev) => {
+        const filtered = prev.filter((c) => c.carId !== carId);
+        return [...filtered, { carId, gasCost: parseFloat(gasCost) || 0, parkingCost: parseFloat(parkingCost) || 0 }];
+      });
     } catch {
       setStatus("error");
     }
@@ -89,22 +120,35 @@ export default function CostForm({ cars, existingCosts }: CostFormProps) {
 
   return (
     <div className="space-y-4">
-      {/* Car selector — always visible */}
-      <div>
-        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-          {t.car}
-        </label>
-        <select
-          value={carId}
-          onChange={(e) => handleCarChange(e.target.value)}
-          className={inputClass}
-        >
-          {cars.map((car) => (
-            <option key={car.id} value={car.id}>
-              {car.name}
-            </option>
-          ))}
-        </select>
+      {/* Date and Car selectors */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+            {t.date}
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => handleDateChange(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+            {t.car}
+          </label>
+          <select
+            value={carId}
+            onChange={(e) => handleCarChange(e.target.value)}
+            className={inputClass}
+          >
+            {cars.map((car) => (
+              <option key={car.id} value={car.id}>
+                {car.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {!editing ? (
