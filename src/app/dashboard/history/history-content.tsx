@@ -227,7 +227,7 @@ function SummaryCard({
   t: HistoryContentProps["t"];
 }) {
   return (
-    <div className="rounded-xl bg-blue-50 ring-1 ring-blue-200">
+    <div className="rounded-xl bg-gray-50">
       <button
         type="button"
         onClick={onToggle}
@@ -252,7 +252,7 @@ function SummaryCard({
         </div>
       </button>
       {isExpanded && (
-        <div className="border-t border-blue-100 px-4 pb-3 pt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+        <div className="border-t border-gray-100 px-4 pb-3 pt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
           {(entry.outboundCount > 0 || entry.returnCount > 0) && (
             <span>
               {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
