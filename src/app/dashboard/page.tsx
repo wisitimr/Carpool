@@ -81,13 +81,16 @@ export default async function DashboardPage() {
     costsThisMonth.map((c) => `${c.carId}_${c.date.toISOString().split("T")[0]}`)
   );
   // Find unique carId+date combos from trips that are missing costs
-  const missingCostDates = [
-    ...new Set(
-      tripsForMyCars
-        .filter((tr) => !costSet.has(`${tr.carId}_${tr.date.toISOString().split("T")[0]}`))
-        .map((tr) => tr.date.toISOString().split("T")[0])
-    ),
-  ].sort();
+  const missingCostEntries = tripsForMyCars
+    .filter((tr) => !costSet.has(`${tr.carId}_${tr.date.toISOString().split("T")[0]}`))
+    .map((tr) => ({ carId: tr.carId, date: tr.date.toISOString().split("T")[0] }));
+  const seen = new Set<string>();
+  const missingCostDates = missingCostEntries.filter((e) => {
+    const key = `${e.carId}_${e.date}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a, b) => a.date.localeCompare(b.date));
 
   const myDebt = debts.find((d) => d.userId === userId);
 

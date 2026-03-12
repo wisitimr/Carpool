@@ -15,10 +15,15 @@ interface ExistingCost {
   parkingCost: number;
 }
 
+interface MissingEntry {
+  carId: string;
+  date: string;
+}
+
 interface CostFormProps {
   cars: { id: string; name: string; defaultGasCost: number }[];
   existingCosts: ExistingCost[];
-  missingCostDates?: string[];
+  missingCostDates?: MissingEntry[];
 }
 
 function getBangkokToday() {
@@ -31,7 +36,7 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
   const [date, setDate] = useState(getBangkokToday);
   const [existingCosts, setExistingCosts] = useState<ExistingCost[]>(initialCosts);
-  const [missingDates, setMissingDates] = useState<string[]>(initialMissingDates);
+  const [missingDates, setMissingDates] = useState<MissingEntry[]>(initialMissingDates);
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("missing-dates-update", { detail: missingDates }));
@@ -117,11 +122,8 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
         { carId, gasCost: parseFloat(gasCost) || 0, parkingCost: parseFloat(parkingCost) || 0 },
       ];
       setExistingCosts(updatedCosts);
-      // Remove date from missing if all cars now have costs
-      const allCarsHaveCosts = cars.every((car) => updatedCosts.some((c) => c.carId === car.id));
-      if (allCarsHaveCosts) {
-        setMissingDates((prev) => prev.filter((d) => d !== date));
-      }
+      // Remove the specific car+date entry from missing
+      setMissingDates((prev) => prev.filter((e) => !(e.carId === carId && e.date === date)));
     } catch {
       setStatus("error");
     }
@@ -139,20 +141,29 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
             {t.missingDates}
           </label>
           <div className="flex flex-wrap gap-2">
-            {missingDates.slice(0, 5).map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => handleDateChange(d)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${
-                  date === d
-                    ? "bg-amber-500 text-white"
-                    : "bg-amber-50 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100"
-                }`}
-              >
-                {d}
-              </button>
-            ))}
+            {missingDates.slice(0, 5).map((entry) => {
+              const carName = cars.find((c) => c.id === entry.carId)?.name ?? "";
+              const isActive = date === entry.date && carId === entry.carId;
+              return (
+                <button
+                  key={`${entry.carId}_${entry.date}`}
+                  type="button"
+                  onClick={async () => {
+                    setCarId(entry.carId);
+                    setDate(entry.date);
+                    const costs = await fetchCostsForDate(entry.date);
+                    applyExistingCosts(costs, entry.carId);
+                  }}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+                    isActive
+                      ? "bg-amber-500 text-white"
+                      : "bg-amber-50 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100"
+                  }`}
+                >
+                  {entry.date} &middot; {carName}
+                </button>
+              );
+            })}
             {missingDates.length > 5 && (
               <span className="rounded-lg bg-amber-50 px-3 py-1 text-xs font-medium text-amber-600 ring-1 ring-amber-200">
                 ...+{missingDates.length - 5}

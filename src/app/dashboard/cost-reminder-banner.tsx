@@ -3,13 +3,18 @@
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n-context";
 
-export default function CostReminderBanner({ initialMissingDates }: { initialMissingDates: string[] }) {
+interface MissingEntry {
+  carId: string;
+  date: string;
+}
+
+export default function CostReminderBanner({ initialMissingDates }: { initialMissingDates: MissingEntry[] }) {
   const { t } = useT();
   const [missingDates, setMissingDates] = useState(initialMissingDates);
 
   useEffect(() => {
     function handler(e: Event) {
-      const detail = (e as CustomEvent<string[]>).detail;
+      const detail = (e as CustomEvent<MissingEntry[]>).detail;
       setMissingDates(detail);
     }
     window.addEventListener("missing-dates-update", handler);
@@ -18,6 +23,8 @@ export default function CostReminderBanner({ initialMissingDates }: { initialMis
 
   if (missingDates.length === 0) return null;
 
+  const uniqueDates = [...new Set(missingDates.map((e) => e.date))];
+
   return (
     <a
       href="#enter-daily-costs"
@@ -25,9 +32,10 @@ export default function CostReminderBanner({ initialMissingDates }: { initialMis
     >
       <p className="font-medium">{t.costReminderBanner}</p>
       <p className="mt-1 text-xs text-amber-600">
-        {t.missingDates}: {missingDates.length <= 3
-          ? missingDates.join(", ")
-          : `${missingDates.slice(0, 3).join(", ")} ...+${missingDates.length - 3}`}
+        {t.missingDates}: {uniqueDates.length <= 3
+          ? uniqueDates.join(", ")
+          : `${uniqueDates.slice(0, 3).join(", ")} ...+${uniqueDates.length - 3}`}
+        {missingDates.length > uniqueDates.length && ` (${missingDates.length} entries)`}
       </p>
     </a>
   );
