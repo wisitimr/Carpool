@@ -270,6 +270,15 @@ function DayBreakdownDetail({
   );
 }
 
+/** Small checkmark icon for settled periods */
+function SettledIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
 /** Collapsible sub-period row — flat style, no nested card borders */
 function SubPeriodRow({
   label,
@@ -278,6 +287,7 @@ function SubPeriodRow({
   onToggle,
   children,
   depth = 0,
+  settled = false,
 }: {
   label: string;
   total: number;
@@ -285,6 +295,7 @@ function SubPeriodRow({
   onToggle: () => void;
   children: React.ReactNode;
   depth?: number;
+  settled?: boolean;
 }) {
   return (
     <div className={depth === 0 ? "border-b border-gray-100 last:border-b-0" : ""}>
@@ -293,9 +304,12 @@ function SubPeriodRow({
         onClick={onToggle}
         className={`flex w-full items-center justify-between py-2 text-left ${depth > 0 ? "pl-3" : ""}`}
       >
-        <p className={`text-xs font-medium ${depth === 0 ? "text-gray-600" : "text-gray-500"}`}>{label}</p>
+        <div className="flex items-center gap-1.5">
+          {settled && <SettledIcon />}
+          <p className={`text-xs font-medium ${depth === 0 ? "text-gray-600" : "text-gray-500"}`}>{label}</p>
+        </div>
         <div className="flex shrink-0 items-center gap-2">
-          <p className={`text-xs font-semibold ${depth === 0 ? "text-gray-700" : "text-gray-600"}`}>฿{total.toFixed(2)}</p>
+          <p className={`text-xs font-semibold ${settled ? "text-green-600" : depth === 0 ? "text-gray-700" : "text-gray-600"}`}>฿{total.toFixed(2)}</p>
           <svg
             className={`h-3 w-3 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             fill="none"
@@ -324,6 +338,7 @@ function SummaryCard({
   dayBreakdownMap,
   expandedSubPeriods,
   toggleSubPeriod,
+  settledDays,
   locale,
   t,
 }: {
@@ -334,11 +349,23 @@ function SummaryCard({
   dayBreakdownMap: Map<string, BreakdownEntry[]>;
   expandedSubPeriods: Set<string>;
   toggleSubPeriod: (key: string) => void;
+  settledDays: Set<string>;
   locale: string;
   t: HistoryContentProps["t"];
 }) {
   const entry = group.entries[0];
   const loc = locale === "th" ? "th-TH-u-ca-buddhist" : "en-US";
+
+  // Check if this period is fully settled
+  const isSettled = useMemo(() => {
+    if (period === "day") return settledDays.has(group.key);
+    // For month/year: settled if all days with breakdown data within the period are settled
+    const prefix = group.key; // "YYYY-MM" or "YYYY"
+    for (const dateISO of dayBreakdownMap.keys()) {
+      if (dateISO.startsWith(prefix) && !settledDays.has(dateISO)) return false;
+    }
+    return true;
+  }, [period, group.key, settledDays, dayBreakdownMap]);
 
   // Build sub-period data when expanded
   const subData = useMemo(() => {
@@ -408,11 +435,12 @@ function SummaryCard({
         onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
+          {isSettled && <SettledIcon />}
           <p className="text-xs font-medium text-gray-500">{group.label}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <p className="font-bold text-gray-800">
+          <p className={`font-bold ${isSettled ? "text-green-600" : "text-gray-800"}`}>
             ฿{entry.totalDebt.toFixed(2)}
           </p>
           <svg
@@ -441,6 +469,7 @@ function SummaryCard({
                   key={day.dateISO}
                   label={day.label}
                   total={day.total}
+                  settled={settledDays.has(day.dateISO)}
                   isExpanded={expandedSubPeriods.has(`${group.key}_${day.dateISO}`)}
                   onToggle={() => toggleSubPeriod(`${group.key}_${day.dateISO}`)}
                 >
@@ -453,28 +482,33 @@ function SummaryCard({
           {/* Year view: month rows, each with day rows */}
           {period === "year" && Array.isArray(subData) && (subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).length > 0 && (
             <div className="mt-1 rounded-lg bg-white px-3 pt-1">
-              {(subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).map((month) => (
-                <SubPeriodRow
-                  key={month.monthKey}
-                  label={month.label}
-                  total={month.total}
-                  isExpanded={!expandedSubPeriods.has(`${group.key}_${month.monthKey}`)}
-                  onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}`)}
-                >
-                  {month.days.map((day) => (
-                    <SubPeriodRow
-                      key={day.dateISO}
-                      label={day.label}
-                      total={day.total}
-                      depth={1}
-                      isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}_${day.dateISO}`)}
-                      onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}_${day.dateISO}`)}
-                    >
-                      <DayBreakdownDetail entries={day.entries} t={t} />
-                    </SubPeriodRow>
-                  ))}
-                </SubPeriodRow>
-              ))}
+              {(subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).map((month) => {
+                const monthSettled = month.days.every((day) => settledDays.has(day.dateISO));
+                return (
+                  <SubPeriodRow
+                    key={month.monthKey}
+                    label={month.label}
+                    total={month.total}
+                    settled={monthSettled}
+                    isExpanded={!expandedSubPeriods.has(`${group.key}_${month.monthKey}`)}
+                    onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}`)}
+                  >
+                    {month.days.map((day) => (
+                      <SubPeriodRow
+                        key={day.dateISO}
+                        label={day.label}
+                        total={day.total}
+                        settled={settledDays.has(day.dateISO)}
+                        depth={1}
+                        isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}_${day.dateISO}`)}
+                        onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}_${day.dateISO}`)}
+                      >
+                        <DayBreakdownDetail entries={day.entries} t={t} />
+                      </SubPeriodRow>
+                    ))}
+                  </SubPeriodRow>
+                );
+              })}
             </div>
           )}
         </div>
@@ -765,6 +799,17 @@ export default function HistoryContent({
     }
     return map;
   }, [allDebts, currentUserId]);
+
+  // Set of settled day keys — days where pendingDebt <= 0
+  const settledDays = useMemo(() => {
+    const dayGroups = groupByPeriod(allDebts, allPayments, "day", locale);
+    const settled = new Set<string>();
+    for (const g of dayGroups) {
+      const e = g.entries.find((e) => e.userId === currentUserId);
+      if (e && e.pendingDebt <= 0) settled.add(g.key);
+    }
+    return settled;
+  }, [allDebts, allPayments, locale, currentUserId]);
   const togglePayment = (id: string) => {
     setExpandedPayments((prev) => {
       const next = new Set(prev);
@@ -1157,6 +1202,7 @@ export default function HistoryContent({
                     dayBreakdownMap={dayBreakdownMap}
                     expandedSubPeriods={expandedSubPeriods}
                     toggleSubPeriod={toggleSubPeriod}
+                    settledDays={settledDays}
                     locale={locale}
                     t={t}
                   />
