@@ -8,6 +8,7 @@ type SummaryPeriod = "day" | "month" | "year";
 interface Trip {
   id: string;
   carName: string;
+  userName?: string | null;
   date: string;
   dateISO: string;
   time: string;
@@ -57,6 +58,7 @@ interface HistoryContentProps {
   allDebts: DebtWithBreakdown[];
   allPayments: PaymentRecord[];
   currentUserId: string;
+  isAdmin?: boolean;
   locale: string;
   t: {
     trips: string;
@@ -86,6 +88,7 @@ interface HistoryContentProps {
     trip: string;
     people: string;
     splitAmong: string;
+    passenger: string;
   };
 }
 
@@ -734,6 +737,7 @@ export default function HistoryContent({
   allDebts,
   allPayments,
   currentUserId,
+  isAdmin = false,
   locale,
   t,
 }: HistoryContentProps) {
@@ -963,6 +967,9 @@ export default function HistoryContent({
                       <div className="min-w-0">
                         <p className="font-medium text-gray-800">{trip.carName}</p>
                         <p className="text-xs text-gray-500">
+                          {isAdmin && trip.userName && (
+                            <span className="font-medium text-gray-600">{trip.userName} &middot; </span>
+                          )}
                           {fmtDate(trip.dateISO, locale)} &middot; {trip.time}
                         </p>
                       </div>
@@ -986,6 +993,7 @@ export default function HistoryContent({
                       <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
                         <th className="pb-3 font-semibold">{t.date}</th>
                         <th className="pb-3 font-semibold">{t.time}</th>
+                        {isAdmin && <th className="pb-3 font-semibold">{t.passenger}</th>}
                         <th className="pb-3 font-semibold">{t.car}</th>
                         <th className="pb-3 text-right font-semibold">{t.type}</th>
                       </tr>
@@ -995,6 +1003,7 @@ export default function HistoryContent({
                         <tr key={trip.id} className="hover:bg-gray-50/50">
                           <td className="py-3 text-gray-700">{fmtDate(trip.dateISO, locale)}</td>
                           <td className="py-3 text-gray-500">{trip.time}</td>
+                          {isAdmin && <td className="py-3 text-gray-600">{trip.userName ?? "—"}</td>}
                           <td className="py-3 font-medium text-gray-800">{trip.carName}</td>
                           <td className="py-3 text-right">
                             <span

@@ -40,8 +40,8 @@ export default async function DashboardPage() {
         select: { id: true },
       }),
       prisma.trip.findMany({
-        where: { userId },
-        include: { car: true },
+        ...(isAdmin ? {} : { where: { userId } }),
+        include: { car: true, user: { select: { name: true } } },
         orderBy: { tappedAt: "desc" },
         take: 5,
       }),
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
           <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
             <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-                {t.recent}
+                {isAdmin ? t.allUsersActivity : t.recent}
               </h2>
             </div>
             <div className="px-5 py-4 sm:px-6 sm:py-5">
@@ -245,6 +245,9 @@ export default async function DashboardPage() {
                         {trip.car.name}
                       </p>
                       <p className="text-xs text-gray-500">
+                        {isAdmin && trip.user?.name && (
+                          <span className="font-medium text-gray-600">{trip.user.name} &middot; </span>
+                        )}
                         {formatDateShort(trip.date, locale)} &middot;{" "}
                         {trip.tappedAt.toLocaleTimeString(locale, {
                           hour: "2-digit",
