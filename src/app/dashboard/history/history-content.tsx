@@ -270,32 +270,34 @@ function DayBreakdownDetail({
   );
 }
 
-/** Collapsible sub-period card used inside month/year views */
-function SubPeriodCard({
+/** Collapsible sub-period row — flat style, no nested card borders */
+function SubPeriodRow({
   label,
   total,
   isExpanded,
   onToggle,
   children,
+  depth = 0,
 }: {
   label: string;
   total: number;
   isExpanded: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  depth?: number;
 }) {
   return (
-    <div className="rounded-lg bg-white ring-1 ring-gray-100">
+    <div className={depth === 0 ? "border-b border-gray-100 last:border-b-0" : ""}>
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-3 py-2 text-left"
+        className={`flex w-full items-center justify-between py-2 text-left ${depth > 0 ? "pl-3" : ""}`}
       >
-        <p className="text-xs font-medium text-gray-500">{label}</p>
+        <p className={`text-xs font-medium ${depth === 0 ? "text-gray-600" : "text-gray-500"}`}>{label}</p>
         <div className="flex shrink-0 items-center gap-2">
-          <p className="text-sm font-semibold text-gray-700">฿{total.toFixed(2)}</p>
+          <p className={`text-xs font-semibold ${depth === 0 ? "text-gray-700" : "text-gray-600"}`}>฿{total.toFixed(2)}</p>
           <svg
-            className={`h-3.5 w-3.5 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            className={`h-3 w-3 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={2}
@@ -306,7 +308,7 @@ function SubPeriodCard({
         </div>
       </button>
       {isExpanded && (
-        <div className="border-t border-gray-100 px-3 pb-2 pt-1">
+        <div className={`pb-2 ${depth > 0 ? "pl-3" : ""}`}>
           {children}
         </div>
       )}
@@ -426,18 +428,20 @@ function SummaryCard({
       </button>
       {isExpanded && (
         <div className="border-t border-gray-100 px-4 pb-3 pt-2">
-          {/* Aggregate totals */}
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-            {(entry.outboundCount > 0 || entry.returnCount > 0) && (
-              <span>
-                {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
-                {entry.outboundCount > 0 && entry.returnCount > 0 && " · "}
-                {entry.returnCount > 0 && <span className="text-indigo-700">{t.return} ({entry.returnCount})</span>}
-              </span>
-            )}
-            {entry.gasTotal > 0 && <span>{t.gas}: ฿{entry.gasTotal.toFixed(2)}</span>}
-            {entry.parkingTotal > 0 && <span>{t.parking}: ฿{entry.parkingTotal.toFixed(2)}</span>}
-          </div>
+          {/* Aggregate totals — only for day view (month/year drill down into sub-periods instead) */}
+          {period === "day" && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+              {(entry.outboundCount > 0 || entry.returnCount > 0) && (
+                <span>
+                  {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
+                  {entry.outboundCount > 0 && entry.returnCount > 0 && " · "}
+                  {entry.returnCount > 0 && <span className="text-indigo-700">{t.return} ({entry.returnCount})</span>}
+                </span>
+              )}
+              {entry.gasTotal > 0 && <span>{t.gas}: ฿{entry.gasTotal.toFixed(2)}</span>}
+              {entry.parkingTotal > 0 && <span>{t.parking}: ฿{entry.parkingTotal.toFixed(2)}</span>}
+            </div>
+          )}
 
           {/* Day view: per-car detail */}
           {period === "day" && Array.isArray(subData) && (subData as BreakdownEntry[]).length > 0 && (
@@ -446,11 +450,11 @@ function SummaryCard({
             </div>
           )}
 
-          {/* Month view: day sub-cards */}
+          {/* Month view: day rows */}
           {period === "month" && Array.isArray(subData) && (subData as { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]).length > 0 && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 rounded-lg bg-white px-3 pt-1">
               {(subData as { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]).map((day) => (
-                <SubPeriodCard
+                <SubPeriodRow
                   key={day.dateISO}
                   label={day.label}
                   total={day.total}
@@ -458,36 +462,35 @@ function SummaryCard({
                   onToggle={() => toggleSubPeriod(`${group.key}_${day.dateISO}`)}
                 >
                   <DayBreakdownDetail entries={day.entries} t={t} />
-                </SubPeriodCard>
+                </SubPeriodRow>
               ))}
             </div>
           )}
 
-          {/* Year view: month sub-cards, each with day sub-cards */}
+          {/* Year view: month rows, each with day rows */}
           {period === "year" && Array.isArray(subData) && (subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).length > 0 && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 rounded-lg bg-white px-3 pt-1">
               {(subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).map((month) => (
-                <SubPeriodCard
+                <SubPeriodRow
                   key={month.monthKey}
                   label={month.label}
                   total={month.total}
                   isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}`)}
                   onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}`)}
                 >
-                  <div className="space-y-2">
-                    {month.days.map((day) => (
-                      <SubPeriodCard
-                        key={day.dateISO}
-                        label={day.label}
-                        total={day.total}
-                        isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}_${day.dateISO}`)}
-                        onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}_${day.dateISO}`)}
-                      >
-                        <DayBreakdownDetail entries={day.entries} t={t} />
-                      </SubPeriodCard>
-                    ))}
-                  </div>
-                </SubPeriodCard>
+                  {month.days.map((day) => (
+                    <SubPeriodRow
+                      key={day.dateISO}
+                      label={day.label}
+                      total={day.total}
+                      depth={1}
+                      isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}_${day.dateISO}`)}
+                      onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}_${day.dateISO}`)}
+                    >
+                      <DayBreakdownDetail entries={day.entries} t={t} />
+                    </SubPeriodRow>
+                  ))}
+                </SubPeriodRow>
               ))}
             </div>
           )}
