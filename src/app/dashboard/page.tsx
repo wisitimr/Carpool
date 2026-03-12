@@ -160,7 +160,7 @@ export default async function DashboardPage() {
                   pending.reverse();
                   if (pending.length === 0) return null;
                   return (
-                    <details className="mt-4">
+                    <details className="mt-4" open>
                       <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700">
                         {t.viewCostBreakdown}
                       </summary>
