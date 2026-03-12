@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState } from "react";
 import { approveUser, revokeUser, setUserRole } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 import type { Role } from "@prisma/client";
@@ -18,26 +18,36 @@ const roleBadge: Record<Role, string> = {
 
 export default function UserManagement({ users, currentUserId }: UserManagementProps) {
   const { t } = useT();
-  const [isPending, startTransition] = useTransition();
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  function handleApprove(userId: string) {
-    startTransition(async () => {
+  async function handleApprove(userId: string) {
+    setLoadingAction(`approve-${userId}`);
+    try {
       await approveUser(userId);
-    });
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
-  function handleRevoke(userId: string) {
-    startTransition(async () => {
+  async function handleRevoke(userId: string) {
+    setLoadingAction(`revoke-${userId}`);
+    try {
       await revokeUser(userId);
-    });
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
-  function handleRoleChange(userId: string, newRole: Role) {
-    startTransition(async () => {
+  async function handleRoleChange(userId: string, newRole: Role) {
+    setLoadingAction(`role-${userId}`);
+    try {
       await setUserRole(userId, newRole);
-    });
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
+  const isAnyLoading = loadingAction !== null;
   const pendingUsers = users.filter((u) => u.role === "PENDING");
   const activeUsers = users.filter((u) => u.role !== "PENDING");
 
@@ -61,10 +71,10 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                 </div>
                 <button
                   onClick={() => handleApprove(user.id)}
-                  disabled={isPending}
+                  disabled={isAnyLoading}
                   className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50"
                 >
-                  {t.approve}
+                  {t.approve}{loadingAction === `approve-${user.id}` && "..."}
                 </button>
               </li>
             ))}
@@ -104,16 +114,16 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                     {user.role === "USER" && (
                       <button
                         onClick={() => handleRevoke(user.id)}
-                        disabled={isPending}
+                        disabled={isAnyLoading}
                         className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
                       >
-                        {t.revoke}
+                        {t.revoke}{loadingAction === `revoke-${user.id}` && "..."}
                       </button>
                     )}
                     <select
                       value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
-                      disabled={isPending}
+                      disabled={isAnyLoading}
                       className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
                     >
                       <option value="USER">USER</option>

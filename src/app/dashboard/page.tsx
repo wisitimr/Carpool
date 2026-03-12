@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { detectLocale, getTranslations } from "@/lib/i18n";
 import CostForm from "./cost-form";
 import CostReminderBanner from "./cost-reminder-banner";
+import DebtSettlement from "./debt-settlement";
 import { todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
 
 export default async function DashboardPage() {
@@ -294,6 +295,29 @@ export default async function DashboardPage() {
                 cars={myCars.map((c) => ({ id: c.id, name: c.name, defaultGasCost: c.defaultGasCost }))}
                 existingCosts={todayCosts.map((tc) => ({ carId: tc.carId, gasCost: tc.gasCost, parkingCost: tc.parkingCost }))}
                 missingCostDates={missingCostDates}
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Debt Settlement (admin only) */}
+        {isAdmin && (
+          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+            <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
+                {t.debtSettlement}
+              </h2>
+            </div>
+            <div className="px-5 py-4 sm:px-6 sm:py-5">
+              <DebtSettlement
+                debts={debts.map((d) => ({
+                  userId: d.userId,
+                  userName: d.userName,
+                  pendingDebt: d.pendingDebt,
+                  totalDebt: d.totalDebt,
+                  totalPaid: d.totalPaid,
+                }))}
+                cars={myCars.map((c) => ({ id: c.id, name: c.name }))}
               />
             </div>
           </section>

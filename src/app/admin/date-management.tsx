@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { disableDate, enableDate } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 
@@ -10,25 +10,33 @@ interface DateManagementProps {
 
 export default function DateManagement({ disabledDates }: DateManagementProps) {
   const { t } = useT();
-  const [isPending, startTransition] = useTransition();
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
 
-  function handleDisable(e: React.FormEvent) {
+  const isAnyLoading = loadingAction !== null;
+
+  async function handleDisable(e: React.FormEvent) {
     e.preventDefault();
     if (!date) return;
 
-    startTransition(async () => {
+    setLoadingAction("disable");
+    try {
       await disableDate(date, reason || undefined);
       setDate("");
       setReason("");
-    });
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
-  function handleEnable(dateStr: string) {
-    startTransition(async () => {
+  async function handleEnable(dateStr: string) {
+    setLoadingAction(`enable-${dateStr}`);
+    try {
       await enableDate(dateStr);
-    });
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
   const inputClass =
@@ -65,10 +73,10 @@ export default function DateManagement({ disabledDates }: DateManagementProps) {
         </div>
         <button
           type="submit"
-          disabled={isPending || !date}
+          disabled={isAnyLoading || !date}
           className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:py-2"
         >
-          {t.disableDate}
+          {t.disableDate}{loadingAction === "disable" && "..."}
         </button>
       </form>
 
@@ -93,10 +101,10 @@ export default function DateManagement({ disabledDates }: DateManagementProps) {
                 </div>
                 <button
                   onClick={() => handleEnable(d.date)}
-                  disabled={isPending}
+                  disabled={isAnyLoading}
                   className="shrink-0 rounded-lg border border-green-600 px-3 py-1.5 text-sm text-green-700 transition hover:bg-green-50 active:scale-[0.98] disabled:opacity-50"
                 >
-                  {t.reEnable}
+                  {t.reEnable}{loadingAction === `enable-${d.date}` && "..."}
                 </button>
               </li>
             ))}

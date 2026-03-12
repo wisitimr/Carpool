@@ -84,7 +84,7 @@ export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
               disabled={isPending}
               className="w-full shrink-0 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:py-2"
             >
-              {t.clearFullBalance}
+              {t.clearFullBalance}{isPending && "..."}
             </button>
           </div>
 
@@ -139,7 +139,7 @@ export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
               }
               className="w-full shrink-0 rounded-lg border border-blue-600 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:py-1.5"
             >
-              {t.recordPayment}
+              {t.recordPayment}{isPending && "..."}
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { updateDefaultGasCost } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 
@@ -10,7 +10,7 @@ interface CostManagementProps {
 
 export default function CostManagement({ cars }: CostManagementProps) {
   const { t } = useT();
-  const [isPending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
   const [gasCost, setGasCost] = useState(
     () => cars[0]?.defaultGasCost?.toString() ?? ""
@@ -24,17 +24,18 @@ export default function CostManagement({ cars }: CostManagementProps) {
     setStatus("idle");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    startTransition(async () => {
-      try {
-        await updateDefaultGasCost(carId, parseFloat(gasCost) || 0);
-        setStatus("saved");
-        setTimeout(() => setStatus("idle"), 2000);
-      } catch {
-        setStatus("error");
-      }
-    });
+    setLoading(true);
+    try {
+      await updateDefaultGasCost(carId, parseFloat(gasCost) || 0);
+      setStatus("saved");
+      setTimeout(() => setStatus("idle"), 2000);
+    } catch {
+      setStatus("error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const inputClass =
@@ -77,10 +78,10 @@ export default function CostManagement({ cars }: CostManagementProps) {
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={loading}
         className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:py-2.5"
       >
-        {isPending ? t.saving : status === "saved" ? t.saved : t.saveCosts}
+        {status === "saved" ? t.saved : t.saveCosts}{loading && "..."}
       </button>
 
       {status === "error" && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { addCar, deleteCar } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 
@@ -11,33 +11,39 @@ interface CarManagementProps {
 
 export default function CarManagement({ cars, users }: CarManagementProps) {
   const { t } = useT();
-  const [isPending, startTransition] = useTransition();
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [ownerId, setOwnerId] = useState(users[0]?.id ?? "");
   const [status, setStatus] = useState<"idle" | "error">("idle");
 
-  function handleAdd(e: React.FormEvent) {
+  const isAnyLoading = loadingAction !== null;
+
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !ownerId) return;
 
-    startTransition(async () => {
-      try {
-        await addCar(name, licensePlate || null, ownerId);
-        setName("");
-        setLicensePlate("");
-        setStatus("idle");
-      } catch {
-        setStatus("error");
-      }
-    });
+    setLoadingAction("add");
+    try {
+      await addCar(name, licensePlate || null, ownerId);
+      setName("");
+      setLicensePlate("");
+      setStatus("idle");
+    } catch {
+      setStatus("error");
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
-  function handleDelete(carId: string) {
+  async function handleDelete(carId: string) {
     if (!confirm(t.confirmDeleteCar)) return;
-    startTransition(async () => {
+    setLoadingAction(`delete-${carId}`);
+    try {
       await deleteCar(carId);
-    });
+    } finally {
+      setLoadingAction(null);
+    }
   }
 
   const inputClass =
@@ -92,10 +98,10 @@ export default function CarManagement({ cars, users }: CarManagementProps) {
         </div>
         <button
           type="submit"
-          disabled={isPending || !name.trim()}
+          disabled={isAnyLoading || !name.trim()}
           className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:py-2.5"
         >
-          {isPending ? t.adding : t.addCar}
+          {t.addCar}{loadingAction === "add" && "..."}
         </button>
         {status === "error" && (
           <p className="text-sm font-medium text-red-600">{t.failedToSave}</p>
@@ -134,10 +140,10 @@ export default function CarManagement({ cars, users }: CarManagementProps) {
                 </a>
                 <button
                   onClick={() => handleDelete(car.id)}
-                  disabled={isPending}
+                  disabled={isAnyLoading}
                   className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
                 >
-                  {t.deleteCar}
+                  {t.deleteCar}{loadingAction === `delete-${car.id}` && "..."}
                 </button>
               </div>
             </li>

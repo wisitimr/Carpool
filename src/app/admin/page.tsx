@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import { SignOutButton } from "@clerk/nextjs";
 import { headers } from "next/headers";
@@ -9,9 +8,8 @@ import { detectLocale, getTranslations } from "@/lib/i18n";
 import UserManagement from "./user-management";
 import DateManagement from "./date-management";
 import CostManagement from "./cost-management";
-import DebtSettlement from "./debt-settlement";
 import CarManagement from "./car-management";
-import { todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
+import { todayBangkok } from "@/lib/timezone";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -26,10 +24,7 @@ export default async function AdminPage() {
 
   const today = todayBangkok();
 
-  const startOfMonth = startOfMonthBangkok();
-  const endOfMonth = endOfMonthBangkok();
-
-  const [allUsers, disabledDates, myCars, allCars, debts] =
+  const [allUsers, disabledDates, myCars, allCars] =
     await Promise.all([
       prisma.user.findMany({
         select: { id: true, name: true, email: true, role: true },
@@ -47,7 +42,6 @@ export default async function AdminPage() {
         include: { owner: { select: { name: true } } },
         orderBy: { name: "asc" },
       }),
-      calculateDebts(startOfMonth, endOfMonth),
     ]);
 
   return (
@@ -140,27 +134,6 @@ export default async function AdminPage() {
             </div>
           </section>
         )}
-
-        {/* Debt Settlement */}
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-green-200">
-          <div className="border-b border-green-100 bg-green-50/50 px-5 py-3 sm:px-6 sm:py-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-green-600 sm:text-sm">
-              {t.debtSettlement}
-            </h2>
-          </div>
-          <div className="px-5 py-4 sm:px-6 sm:py-5">
-            <DebtSettlement
-              debts={debts.map((d) => ({
-                userId: d.userId,
-                userName: d.userName,
-                pendingDebt: d.pendingDebt,
-                totalDebt: d.totalDebt,
-                totalPaid: d.totalPaid,
-              }))}
-              cars={myCars.map((c) => ({ id: c.id, name: c.name }))}
-            />
-          </div>
-        </section>
 
         {/* Operating Days */}
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
