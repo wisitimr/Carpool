@@ -141,26 +141,63 @@ export default async function DashboardPage() {
                   ฿{myDebt.pendingDebt.toFixed(2)}
                 </p>
 
-                {myDebt.breakdown.length > 0 && (
-                  <details className="mt-4">
-                    <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700">
-                      {t.viewCostBreakdown}
-                    </summary>
-                    <ul className="mt-3 divide-y divide-gray-100 text-sm">
-                      {myDebt.breakdown.map((b, i) => (
-                        <li key={i} className="flex items-center justify-between gap-3 py-2.5">
-                          <span className="min-w-0 truncate text-gray-600">
-                            {b.carName} &mdash;{" "}
-                            {b.date.toLocaleDateString(locale)} ({b.passengerCount} {t.riders})
-                          </span>
-                          <span className="shrink-0 font-medium text-gray-900">
-                            ฿{b.share.toFixed(2)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
+                {(() => {
+                  // Show only unpaid breakdown entries (subtract payments from oldest first)
+                  const sorted = [...myDebt.breakdown].sort(
+                    (a, b) => a.date.getTime() - b.date.getTime()
+                  );
+                  let remaining = myDebt.totalPaid;
+                  const pending: typeof sorted = [];
+                  for (const entry of sorted) {
+                    if (remaining >= entry.share) {
+                      remaining = Math.round((remaining - entry.share) * 100) / 100;
+                    } else if (remaining > 0) {
+                      const ratio = (entry.share - remaining) / entry.share;
+                      pending.push({
+                        ...entry,
+                        share: Math.round((entry.share - remaining) * 100) / 100,
+                        gasShare: Math.round(entry.gasShare * ratio * 100) / 100,
+                        parkingShare: Math.round(entry.parkingShare * ratio * 100) / 100,
+                      });
+                      remaining = 0;
+                    } else {
+                      pending.push(entry);
+                    }
+                  }
+                  // Show newest first
+                  pending.reverse();
+                  if (pending.length === 0) return null;
+                  return (
+                    <details className="mt-4">
+                      <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700">
+                        {t.viewCostBreakdown}
+                      </summary>
+                      <ul className="mt-3 divide-y divide-gray-100 text-sm">
+                        {pending.map((b, i) => (
+                          <li key={i} className="py-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="min-w-0 truncate text-gray-600">
+                                {b.carName} &mdash;{" "}
+                                {b.date.toLocaleDateString(locale)} ({b.passengerCount} {t.riders})
+                              </span>
+                              <span className="shrink-0 font-medium text-gray-900">
+                                ฿{b.share.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="mt-0.5 flex gap-3 text-xs text-gray-400">
+                              {b.gasShare > 0 && (
+                                <span>{t.gas}: ฿{b.gasShare.toFixed(2)}</span>
+                              )}
+                              {b.parkingShare > 0 && (
+                                <span>{t.parking}: ฿{b.parkingShare.toFixed(2)}</span>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  );
+                })()}
               </div>
             ) : (
               <p className="text-2xl font-extrabold tracking-tight text-green-600 sm:text-3xl">
