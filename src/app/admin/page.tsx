@@ -12,6 +12,7 @@ import CostManagement from "./cost-management";
 import SystemPauseToggle from "./system-pause-toggle";
 import DebtSettlement from "./debt-settlement";
 import CarManagement from "./car-management";
+import { todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -24,12 +25,10 @@ export default async function AdminPage() {
 
   const userId = user.id;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = todayBangkok();
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfMonth = startOfMonthBangkok();
+  const endOfMonth = endOfMonthBangkok();
 
   const [allUsers, disabledDates, myCars, allCars, systemPausedConfig, debts] =
     await Promise.all([

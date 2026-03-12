@@ -2,15 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { TripType, Role } from "@prisma/client";
+import { nowBangkok, todayBangkok } from "@/lib/timezone";
 
 const DEBOUNCE_HOURS = 2;
 const EVENING_GAP_HOURS = 4;
-
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
@@ -37,8 +32,8 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = user.id;
-  const now = new Date();
-  const today = startOfDay(now);
+  const now = nowBangkok();
+  const today = todayBangkok();
 
   // --- Check: system-wide pause ---
   const systemPaused = await prisma.systemConfig.findUnique({

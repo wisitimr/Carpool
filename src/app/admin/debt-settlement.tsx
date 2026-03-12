@@ -64,11 +64,11 @@ export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
             <div className="min-w-0">
               <p className="font-medium">{d.userName ?? "Unknown"}</p>
               <p className="text-sm text-gray-500">
-                {t.accrued}: ${d.totalDebt.toFixed(2)} &middot; {t.paid}:{" "}
-                ${d.totalPaid.toFixed(2)}
+                {t.accrued}: ฿{d.totalDebt.toFixed(2)} &middot; {t.paid}:{" "}
+                ฿{d.totalPaid.toFixed(2)}
               </p>
               <p className="text-lg font-bold text-red-600">
-                {t.pending}: ${d.pendingDebt.toFixed(2)}
+                {t.pending}: ฿{d.pendingDebt.toFixed(2)}
               </p>
             </div>
             <button

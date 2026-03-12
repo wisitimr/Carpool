@@ -7,6 +7,7 @@ import { SignOutButton } from "@clerk/nextjs";
 import { headers } from "next/headers";
 import { detectLocale, getTranslations } from "@/lib/i18n";
 import CostForm from "./cost-form";
+import { nowBangkok, todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -20,12 +21,11 @@ export default async function DashboardPage() {
   const userId = user.id;
   const isAdmin = user.role === Role.ADMIN;
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const now = nowBangkok();
+  const startOfMonth = startOfMonthBangkok();
+  const endOfMonth = endOfMonthBangkok();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = todayBangkok();
 
   const [myCars, todaysTrips, recentTrips, debts, myPayments] =
     await Promise.all([
@@ -48,6 +48,16 @@ export default async function DashboardPage() {
         take: 20,
       }),
     ]);
+
+  const todayCosts = myCars.length > 0
+    ? await prisma.dailyCost.findMany({
+        where: {
+          carId: { in: myCars.map((c) => c.id) },
+          date: today,
+        },
+      })
+    : [];
+  const hasMissingCosts = myCars.length > 0 && todayCosts.length < myCars.length;
 
   const myDebt = debts.find((d) => d.userId === userId);
 
@@ -87,6 +97,12 @@ export default async function DashboardPage() {
         </div>
       </header>
 
+      {hasMissingCosts && (
+        <div className="animate-fade-in mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-medium text-amber-800 shadow-sm sm:mb-6">
+          {t.costReminderBanner}
+        </div>
+      )}
+
       <div className="stagger-children space-y-4 sm:space-y-6">
         {/* Debt Card */}
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
@@ -99,27 +115,27 @@ export default async function DashboardPage() {
             {myDebt && myDebt.pendingDebt > 0 ? (
               <div>
                 <p className="text-3xl font-extrabold tracking-tight text-red-600 sm:text-4xl">
-                  ${myDebt.pendingDebt.toFixed(2)}
+                  ฿{myDebt.pendingDebt.toFixed(2)}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-500">
                   <span>
                     {t.accrued}{" "}
                     <span className="font-medium text-gray-700">
-                      ${myDebt.totalDebt.toFixed(2)}
+                      ฿{myDebt.totalDebt.toFixed(2)}
                     </span>
                   </span>
                   <span>&middot;</span>
                   <span>
                     {t.paid}{" "}
                     <span className="font-medium text-green-600">
-                      ${myDebt.totalPaid.toFixed(2)}
+                      ฿{myDebt.totalPaid.toFixed(2)}
                     </span>
                   </span>
                 </div>
               </div>
             ) : (
               <p className="text-2xl font-extrabold tracking-tight text-green-600 sm:text-3xl">
-                $0.00
+                ฿0.00
                 <span className="ml-2 text-base font-normal text-gray-400">
                   {t.allClear}
                 </span>
@@ -139,7 +155,7 @@ export default async function DashboardPage() {
                         {b.date.toLocaleDateString(locale)} ({b.passengerCount} {t.riders})
                       </span>
                       <span className="shrink-0 font-medium text-gray-900">
-                        ${b.share.toFixed(2)}
+                        ฿{b.share.toFixed(2)}
                       </span>
                     </li>
                   ))}
@@ -305,7 +321,7 @@ export default async function DashboardPage() {
                         </p>
                       </div>
                       <span className="shrink-0 font-semibold text-green-600">
-                        ${p.amount.toFixed(2)}
+                        ฿{p.amount.toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -335,7 +351,7 @@ export default async function DashboardPage() {
                             {p.note ?? "\u2014"}
                           </td>
                           <td className="py-3 text-right font-semibold text-green-600">
-                            ${p.amount.toFixed(2)}
+                            ฿{p.amount.toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -383,13 +399,13 @@ export default async function DashboardPage() {
                           )}
                         </p>
                         <p className="font-bold text-red-600">
-                          ${d.pendingDebt.toFixed(2)}
+                          ฿{d.pendingDebt.toFixed(2)}
                         </p>
                       </div>
                       <div className="mt-1 flex gap-3 text-xs text-gray-500">
-                        <span>{t.accrued}: ${d.totalDebt.toFixed(2)}</span>
+                        <span>{t.accrued}: ฿{d.totalDebt.toFixed(2)}</span>
                         <span className="text-green-600">
-                          {t.paid}: ${d.totalPaid.toFixed(2)}
+                          {t.paid}: ฿{d.totalPaid.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -422,13 +438,13 @@ export default async function DashboardPage() {
                             )}
                           </td>
                           <td className="py-3 text-right text-gray-700">
-                            ${d.totalDebt.toFixed(2)}
+                            ฿{d.totalDebt.toFixed(2)}
                           </td>
                           <td className="py-3 text-right text-green-600">
-                            ${d.totalPaid.toFixed(2)}
+                            ฿{d.totalPaid.toFixed(2)}
                           </td>
                           <td className="py-3 text-right text-red-600">
-                            ${d.pendingDebt.toFixed(2)}
+                            ฿{d.pendingDebt.toFixed(2)}
                           </td>
                         </tr>
                       ))}

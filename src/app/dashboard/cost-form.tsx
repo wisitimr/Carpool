@@ -10,13 +10,21 @@ interface CostFormProps {
 export default function CostForm({ cars }: CostFormProps) {
   const { t } = useT();
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(() => {
+    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+    return d.toISOString().split("T")[0];
+  });
   const [gasCost, setGasCost] = useState("");
   const [parkingCost, setParkingCost] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const carName = cars.find((c) => c.id === carId)?.name ?? "";
+    const summary = `${t.confirmSaveCostsTitle}\n\n${t.car}: ${carName}\n${t.date}: ${date}\n${t.gasCost}: ฿${parseFloat(gasCost) || 0}\n${t.parkingCost}: ฿${parseFloat(parkingCost) || 0}`;
+    if (!confirm(summary)) return;
+
     setStatus("saving");
 
     try {

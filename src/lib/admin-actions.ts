@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { todayBangkok } from "@/lib/timezone";
 
 // ---------------------------------------------------------------------------
 // Reusable authorization guard — ensures only ADMIN (Car Owners) can proceed
@@ -216,8 +217,7 @@ export async function recordPayment(
     throw new Error("Payment amount must be positive");
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = todayBangkok();
 
   await prisma.payment.create({
     data: {
@@ -244,8 +244,7 @@ export async function clearFullBalance(userId: string, carId: string) {
     throw new Error("User has no pending debt");
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = todayBangkok();
 
   await prisma.payment.create({
     data: {

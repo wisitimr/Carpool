@@ -46,12 +46,14 @@ const translations = {
     pending: "Pending",
     you: "you",
     enterDailyCosts: "Enter Daily Costs",
-    gasCost: "Gas ($)",
-    parkingCost: "Parking ($)",
+    gasCost: "Gas (฿)",
+    parkingCost: "Parking (฿)",
     saving: "Saving...",
     saved: "Saved!",
     saveCosts: "Save Costs",
     failedToSave: "Failed to save. Please try again.",
+    confirmSaveCostsTitle: "Save these costs?",
+    costReminderBanner: "You haven't entered today's costs yet — scroll down to enter.",
 
     // Admin
     adminDashboard: "Admin Dashboard",
@@ -75,7 +77,7 @@ const translations = {
     debtSettlement: "Debt Settlement",
     allBalancesCleared: "All balances are cleared.",
     clearFullBalance: "Clear Full Balance",
-    customAmount: "Custom Amount ($)",
+    customAmount: "Custom Amount (฿)",
     recordPayment: "Record Payment",
     operatingDays: "Operating Days",
     reason: "Reason (optional)",
@@ -173,6 +175,8 @@ const translations = {
     saved: "บันทึกแล้ว!",
     saveCosts: "บันทึกค่าใช้จ่าย",
     failedToSave: "บันทึกไม่สำเร็จ กรุณาลองใหม่",
+    confirmSaveCostsTitle: "บันทึกค่าใช้จ่ายนี้?",
+    costReminderBanner: "คุณยังไม่ได้บันทึกค่าใช้จ่ายวันนี้ — เลื่อนลงเพื่อบันทึก",
 
     // Admin
     adminDashboard: "แดชบอร์ดแอดมิน",

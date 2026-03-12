@@ -12,9 +12,11 @@ export default function CostManagement({ cars }: CostManagementProps) {
   const { t } = useT();
   const [isPending, startTransition] = useTransition();
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(() => {
+    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+    return d.toISOString().split("T")[0];
+  });
   const [gasCost, setGasCost] = useState("");
-  const [parkingCost, setParkingCost] = useState("");
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
 
   function handleSubmit(e: React.FormEvent) {
@@ -25,11 +27,10 @@ export default function CostManagement({ cars }: CostManagementProps) {
           carId,
           date,
           parseFloat(gasCost) || 0,
-          parseFloat(parkingCost) || 0
+          0
         );
         setStatus("saved");
         setGasCost("");
-        setParkingCost("");
         setTimeout(() => setStatus("idle"), 2000);
       } catch {
         setStatus("error");
@@ -72,35 +73,19 @@ export default function CostManagement({ cars }: CostManagementProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {t.gasCost}
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={gasCost}
-            onChange={(e) => setGasCost(e.target.value)}
-            placeholder="0.00"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {t.parkingCost}
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={parkingCost}
-            onChange={(e) => setParkingCost(e.target.value)}
-            placeholder="0.00"
-            className={inputClass}
-          />
-        </div>
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+          {t.gasCost}
+        </label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={gasCost}
+          onChange={(e) => setGasCost(e.target.value)}
+          placeholder="0.00"
+          className={inputClass}
+        />
       </div>
 
       <button
