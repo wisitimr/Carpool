@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { approveUser, deleteUser, setUserRole } from "@/lib/admin-actions";
+import { approveUser, revokeUser, deleteUser, setUserRole } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 import type { Role } from "@prisma/client";
 
@@ -34,6 +34,15 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
     setLoadingAction(`approve-${userId}`);
     try {
       await approveUser(userId);
+    } finally {
+      setLoadingAction(null);
+    }
+  }
+
+  async function handleRevoke(userId: string) {
+    setLoadingAction(`revoke-${userId}`);
+    try {
+      await revokeUser(userId);
     } finally {
       setLoadingAction(null);
     }
@@ -118,12 +127,8 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
             const isMe = user.id === currentUserId;
             const isExpanded = expandedUsers.has(user.id);
             return (
-              <li key={user.id} className="rounded-xl bg-gray-50">
-                <button
-                  type="button"
-                  onClick={() => !isMe && toggleUser(user.id)}
-                  className={`flex w-full items-center justify-between px-4 py-3 text-left ${isMe ? "cursor-default" : ""}`}
-                >
+              <li key={user.id} className="rounded-xl bg-gray-50 px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{user.name ?? t.noName}</p>
@@ -136,21 +141,16 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                     </span>
                   </div>
                   {!isMe && (
-                    <svg
-                      className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  )}
-                </button>
-
-                {isExpanded && !isMe && (
-                  <div className="border-t border-gray-100 px-4 pb-3 pt-2">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex shrink-0 items-center gap-2">
+                      {user.role === "USER" && (
+                        <button
+                          onClick={() => handleRevoke(user.id)}
+                          disabled={isAnyLoading}
+                          className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                        >
+                          {t.revoke}{loadingAction === `revoke-${user.id}` && "..."}
+                        </button>
+                      )}
                       <select
                         value={user.role}
                         onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
@@ -162,13 +162,33 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                         <option value="PENDING">PENDING</option>
                       </select>
                       <button
-                        onClick={() => handleDelete(user.id)}
-                        disabled={isAnyLoading}
-                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                        type="button"
+                        onClick={() => toggleUser(user.id)}
+                        className="text-gray-400"
                       >
-                        {t.deleteUser}{loadingAction === `delete-${user.id}` && "..."}
+                        <svg
+                          className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
                       </button>
                     </div>
+                  )}
+                </div>
+
+                {isExpanded && !isMe && (
+                  <div className="mt-2 border-t border-gray-100 pt-2">
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      disabled={isAnyLoading}
+                      className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {t.deleteUser}{loadingAction === `delete-${user.id}` && "..."}
+                    </button>
                   </div>
                 )}
               </li>
