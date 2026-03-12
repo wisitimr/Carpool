@@ -168,27 +168,47 @@ export default async function DashboardPage() {
                         {t.viewCostBreakdown}
                       </summary>
                       <ul className="mt-3 divide-y divide-gray-100 text-sm">
-                        {pending.map((b, i) => (
-                          <li key={i} className="py-2.5">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="min-w-0 truncate text-gray-600">
-                                {b.carName} &mdash;{" "}
-                                {formatDateShort(b.date, locale)} ({b.passengerCount} {t.riders})
-                              </span>
-                              <span className="shrink-0 font-medium text-gray-900">
-                                ฿{b.share.toFixed(2)}
-                              </span>
-                            </div>
-                            <div className="mt-0.5 flex gap-3 text-xs text-gray-400">
-                              {b.gasShare > 0 && (
-                                <span>{t.gas}: ฿{b.gasShare.toFixed(2)}</span>
-                              )}
-                              {b.parkingShare > 0 && (
-                                <span>{t.parking}: ฿{b.parkingShare.toFixed(2)}</span>
-                              )}
-                            </div>
-                          </li>
-                        ))}
+                        {pending.map((b, i) => {
+                          const tripCount = b.outboundCount + b.returnCount;
+                          const gasCostPerTrip = tripCount > 0 ? b.gasShare / tripCount : 0;
+                          const parkingTotal = b.parkingShare * b.passengerCount;
+                          return (
+                            <li key={i} className="py-2.5">
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="min-w-0 truncate text-gray-600">
+                                  {b.carName} &mdash;{" "}
+                                  {formatDateShort(b.date, locale)}
+                                </span>
+                                <span className="shrink-0 font-medium text-gray-900">
+                                  ฿{b.share.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="mt-1 space-y-0.5 text-xs text-gray-400">
+                                {tripCount > 0 && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-gray-500">{t.trips}:</span>
+                                    {b.outboundCount > 0 && (
+                                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-600">{b.outboundCount} {t.outbound}</span>
+                                    )}
+                                    {b.returnCount > 0 && (
+                                      <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-indigo-600">{b.returnCount} {t.return}</span>
+                                    )}
+                                  </div>
+                                )}
+                                {b.gasShare > 0 && (
+                                  <p>
+                                    {t.gas}: ฿{gasCostPerTrip.toFixed(2)} × {tripCount} {t.trip} = ฿{b.gasShare.toFixed(2)}
+                                  </p>
+                                )}
+                                {b.parkingShare > 0 && (
+                                  <p>
+                                    {t.parking}: ฿{parkingTotal.toFixed(2)} ÷ {b.passengerCount} {t.riders} = ฿{b.parkingShare.toFixed(2)}
+                                  </p>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </details>
                   );

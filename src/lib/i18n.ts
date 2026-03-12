@@ -69,6 +69,9 @@ const translations = {
     history: "History",
     recent: "Recent",
     trips: "Trips",
+    trip: "trip",
+    perTrip: "per trip",
+    splitAmong: "split among",
     payments: "Payments",
     viewAll: "View All",
 
@@ -204,6 +207,9 @@ const translations = {
     history: "ประวัติ",
     recent: "ล่าสุด",
     trips: "การเดินทาง",
+    trip: "เที่ยว",
+    perTrip: "ต่อเที่ยว",
+    splitAmong: "หารกัน",
     payments: "การชำระเงิน",
     viewAll: "ดูทั้งหมด",
 
