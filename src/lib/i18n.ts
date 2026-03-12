@@ -74,6 +74,7 @@ const translations = {
     splitAmong: "split among",
     payments: "Payments",
     viewAll: "View All",
+    allUsersActivity: "All Users Activity",
 
     // Admin
     settings: "Settings",
@@ -216,6 +217,7 @@ const translations = {
     splitAmong: "หารกัน",
     payments: "การชำระเงิน",
     viewAll: "ดูทั้งหมด",
+    allUsersActivity: "กิจกรรมผู้ใช้ทั้งหมด",
 
     // Admin
     settings: "ตั้งค่า",

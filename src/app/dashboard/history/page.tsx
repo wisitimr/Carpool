@@ -17,6 +17,7 @@ export default async function HistoryPage() {
   const t = getTranslations(locale);
 
   const userId = user.id;
+  const isAdmin = user.role === Role.ADMIN;
 
   // Fetch all-time data for summary (breakdown has per-date granularity)
   const allTimeStart = new Date(2000, 0, 1);
@@ -24,8 +25,8 @@ export default async function HistoryPage() {
 
   const [recentTrips, allDebts, allPayments] = await Promise.all([
     prisma.trip.findMany({
-      where: { userId },
-      include: { car: true },
+      ...(isAdmin ? {} : { where: { userId } }),
+      include: { car: true, user: { select: { name: true } } },
       orderBy: { tappedAt: "desc" },
       take: 100,
     }),
@@ -39,6 +40,7 @@ export default async function HistoryPage() {
   const trips = recentTrips.map((trip) => ({
     id: trip.id,
     carName: trip.car.name,
+    userName: trip.user?.name ?? null,
     date: formatDateShort(trip.date, locale),
     dateISO: trip.date.toISOString().split("T")[0],
     time: trip.tappedAt.toLocaleTimeString(locale, {
@@ -101,6 +103,7 @@ export default async function HistoryPage() {
         allDebts={serializedDebts}
         allPayments={serializedPayments}
         currentUserId={userId}
+        isAdmin={isAdmin}
         locale={locale}
         t={{
           trips: t.trips,
@@ -130,6 +133,7 @@ export default async function HistoryPage() {
           trip: t.trip,
           people: t.people,
           splitAmong: t.splitAmong,
+          passenger: t.passenger,
         }}
       />
     </main>
