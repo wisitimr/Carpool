@@ -81,9 +81,11 @@ export default async function HistoryPage() {
       <header className="animate-fade-in mb-6 flex items-center gap-3 sm:mb-8">
         <a
           href="/dashboard"
-          className="shrink-0 rounded-xl bg-gray-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 sm:px-4"
+          className="shrink-0 rounded-xl bg-gray-900 p-2 text-white shadow-sm transition hover:bg-gray-800"
         >
-          {t.back}
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
         </a>
         <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
           {t.history}
