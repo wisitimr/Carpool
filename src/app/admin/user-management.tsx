@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { approveUser, revokeUser, setUserRole } from "@/lib/admin-actions";
+import { approveUser, deleteUser, setUserRole } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 import type { Role } from "@prisma/client";
 
@@ -19,6 +19,16 @@ const roleBadge: Record<Role, string> = {
 export default function UserManagement({ users, currentUserId }: UserManagementProps) {
   const { t } = useT();
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+
+  function toggleUser(id: string) {
+    setExpandedUsers((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   async function handleApprove(userId: string) {
     setLoadingAction(`approve-${userId}`);
@@ -29,10 +39,11 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
     }
   }
 
-  async function handleRevoke(userId: string) {
-    setLoadingAction(`revoke-${userId}`);
+  async function handleDelete(userId: string) {
+    if (!confirm(t.confirmDeleteUser)) return;
+    setLoadingAction(`delete-${userId}`);
     try {
-      await revokeUser(userId);
+      await deleteUser(userId);
     } finally {
       setLoadingAction(null);
     }
@@ -63,19 +74,30 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
             {pendingUsers.map((user) => (
               <li
                 key={user.id}
-                className="flex items-center justify-between gap-3 rounded-xl bg-yellow-50 px-4 py-3"
+                className="rounded-xl bg-yellow-50"
               >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{user.name ?? t.noName}</p>
-                  <p className="truncate text-sm text-gray-500">{user.email}</p>
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{user.name ?? t.noName}</p>
+                    <p className="truncate text-sm text-gray-500">{user.email}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      onClick={() => handleApprove(user.id)}
+                      disabled={isAnyLoading}
+                      className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {t.approve}{loadingAction === `approve-${user.id}` && "..."}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      disabled={isAnyLoading}
+                      className="shrink-0 rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {t.deleteUser}{loadingAction === `delete-${user.id}` && "..."}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleApprove(user.id)}
-                  disabled={isAnyLoading}
-                  className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50"
-                >
-                  {t.approve}{loadingAction === `approve-${user.id}` && "..."}
-                </button>
               </li>
             ))}
           </ul>
@@ -92,49 +114,66 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
           {t.activeUsers} ({activeUsers.length})
         </h3>
         <ul className="space-y-2">
-          {activeUsers.map((user) => (
-            <li
-              key={user.id}
-              className="rounded-xl bg-gray-50 px-4 py-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{user.name ?? t.noName}</p>
-                    <p className="truncate text-sm text-gray-500">{user.email}</p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${roleBadge[user.role]}`}
-                  >
-                    {user.role}
-                  </span>
-                </div>
-                {user.id !== currentUserId && (
-                  <div className="flex shrink-0 items-center gap-2">
-                    {user.role === "USER" && (
-                      <button
-                        onClick={() => handleRevoke(user.id)}
-                        disabled={isAnyLoading}
-                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
-                      >
-                        {t.revoke}{loadingAction === `revoke-${user.id}` && "..."}
-                      </button>
-                    )}
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
-                      disabled={isAnyLoading}
-                      className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
+          {activeUsers.map((user) => {
+            const isMe = user.id === currentUserId;
+            const isExpanded = expandedUsers.has(user.id);
+            return (
+              <li key={user.id} className="rounded-xl bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => !isMe && toggleUser(user.id)}
+                  className={`flex w-full items-center justify-between px-4 py-3 text-left ${isMe ? "cursor-default" : ""}`}
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{user.name ?? t.noName}</p>
+                      <p className="truncate text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${roleBadge[user.role]}`}
                     >
-                      <option value="USER">USER</option>
-                      <option value="ADMIN">ADMIN</option>
-                      <option value="PENDING">PENDING</option>
-                    </select>
+                      {user.role}
+                    </span>
+                  </div>
+                  {!isMe && (
+                    <svg
+                      className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  )}
+                </button>
+
+                {isExpanded && !isMe && (
+                  <div className="border-t border-gray-100 px-4 pb-3 pt-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
+                        disabled={isAnyLoading}
+                        className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
+                      >
+                        <option value="USER">USER</option>
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="PENDING">PENDING</option>
+                      </select>
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        disabled={isAnyLoading}
+                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {t.deleteUser}{loadingAction === `delete-${user.id}` && "..."}
+                      </button>
+                    </div>
                   </div>
                 )}
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

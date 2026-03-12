@@ -34,6 +34,17 @@ export async function approveUser(userId: string) {
   revalidatePath("/admin");
 }
 
+/** Delete a user and all associated data (trips, payments, owned cars) */
+export async function deleteUser(userId: string) {
+  const admin = await requireAdmin();
+  if (userId === admin.id) {
+    throw new Error("Cannot delete yourself");
+  }
+  await prisma.user.delete({ where: { id: userId } });
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
 /** Revoke a USER → back to PENDING */
 export async function revokeUser(userId: string) {
   const admin = await requireAdmin();

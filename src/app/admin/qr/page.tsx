@@ -28,14 +28,14 @@ export default async function QRPage({
 
   return (
     <main className="mx-auto max-w-xl px-4 pb-8 pt-6 sm:p-6 sm:pt-8">
-      <header className="animate-fade-in relative mb-6 flex items-center justify-center sm:mb-8">
+      <header className="animate-fade-in mb-6 flex items-center gap-3 sm:mb-8">
         <a
           href="/admin"
-          className="absolute left-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 sm:px-4"
+          className="shrink-0 rounded-xl bg-gray-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 sm:px-4"
         >
           {t.back}
         </a>
-        <div className="text-center">
+        <div className="min-w-0">
           <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
             {t.qrCodeCheckin}
           </h1>
