@@ -632,7 +632,7 @@ export default function HistoryContent({
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
               activeTab === tab.key
-                ? "bg-blue-600 text-white shadow-sm"
+                ? "bg-gray-900 text-white shadow-sm"
                 : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
             }`}
           >
