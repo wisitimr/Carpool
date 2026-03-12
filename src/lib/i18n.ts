@@ -79,11 +79,11 @@ const translations = {
     // Admin
     settings: "Settings",
     qrCode: "QR Code",
-    userManagement: "User Management",
+    userManagement: "Passenger Management",
     pendingApproval: "Pending Approval",
     approve: "Approve",
-    noPendingUsers: "No pending users.",
-    activeUsers: "Active Users",
+    noPendingUsers: "No pending passengers.",
+    activeUsers: "Active Passengers",
     noName: "No name",
     revoke: "Revoke",
     deleteUser: "Delete",
@@ -131,7 +131,7 @@ const translations = {
     tooSoon: "Too Soon for Evening",
     tooSoonDesc: "Not enough time has passed since your morning tap. Try again later.",
     systemDisabled: "System Disabled",
-    systemDisabledDesc: "The carpool system is disabled for today.",
+    systemDisabledDesc: "The RodBus system is disabled for today.",
     tapReceived: "Tap Received",
     tapProcessed: "Your tap has been processed.",
 
@@ -141,7 +141,7 @@ const translations = {
 
     // Pending Approval
     pendingApprovalTitle: "Pending Approval",
-    pendingApprovalDesc: "Your account is awaiting approval from an administrator. You will be able to use the carpool system once approved.",
+    pendingApprovalDesc: "Your account is awaiting approval from an administrator. You will be able to use the RodBus system once approved.",
     signedInAs: "Signed in as",
   },
   th: {
@@ -222,11 +222,11 @@ const translations = {
     // Admin
     settings: "ตั้งค่า",
     qrCode: "QR Code",
-    userManagement: "จัดการผู้ใช้",
+    userManagement: "จัดการผู้โดยสาร",
     pendingApproval: "รอการอนุมัติ",
     approve: "อนุมัติ",
-    noPendingUsers: "ไม่มีผู้ใช้ที่รอการอนุมัติ",
-    activeUsers: "ผู้ใช้งาน",
+    noPendingUsers: "ไม่มีผู้โดยสารที่รอการอนุมัติ",
+    activeUsers: "ผู้โดยสารที่ใช้งาน",
     noName: "ไม่มีชื่อ",
     revoke: "เพิกถอน",
     deleteUser: "ลบ",
@@ -274,7 +274,7 @@ const translations = {
     tooSoon: "เร็วเกินไปสำหรับเย็น",
     tooSoonDesc: "ยังไม่ถึงเวลาจากการแตะเช้า ลองใหม่ทีหลัง",
     systemDisabled: "ระบบปิดอยู่",
-    systemDisabledDesc: "ระบบ Carpool ปิดสำหรับวันนี้",
+    systemDisabledDesc: "ระบบ RodBus ปิดสำหรับวันนี้",
     tapReceived: "รับการแตะแล้ว",
     tapProcessed: "การแตะของคุณถูกประมวลผลแล้ว",
 
@@ -284,7 +284,7 @@ const translations = {
 
     // Pending Approval
     pendingApprovalTitle: "รอการอนุมัติ",
-    pendingApprovalDesc: "บัญชีของคุณกำลังรอการอนุมัติจากแอดมิน คุณจะสามารถใช้ระบบ Carpool ได้หลังจากได้รับการอนุมัติ",
+    pendingApprovalDesc: "บัญชีของคุณกำลังรอการอนุมัติจากแอดมิน คุณจะสามารถใช้ระบบ RodBus ได้หลังจากได้รับการอนุมัติ",
     signedInAs: "เข้าสู่ระบบในชื่อ",
   },
 } as const;
