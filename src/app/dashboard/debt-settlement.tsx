@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { clearFullBalance } from "@/lib/admin-actions";
+import { markAsSettled } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 
 interface BreakdownItem {
@@ -43,11 +43,11 @@ export default function DebtSettlement({ debts, carId }: DebtSettlementProps) {
 
   async function handleClearFull(userId: string) {
     const user = debts.find((d) => d.userId === userId);
-    const summary = `${t.clearFullBalance}?\n\n${user?.userName ?? "Unknown"}\n${t.pending}: ฿${user?.pendingDebt.toFixed(2)}`;
+    const summary = `${t.markAsSettled}?\n\n${user?.userName ?? "Unknown"}\n${t.pending}: ฿${user?.pendingDebt.toFixed(2)}`;
     if (!confirm(summary)) return;
     setLoadingAction(`clear-${userId}`);
     try {
-      await clearFullBalance(userId, carId);
+      await markAsSettled(userId, carId);
     } finally {
       setLoadingAction(null);
     }
@@ -151,7 +151,7 @@ export default function DebtSettlement({ debts, carId }: DebtSettlementProps) {
                     disabled={isAnyLoading}
                     className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50 sm:w-auto"
                   >
-                    {t.clearFullBalance}{isClearLoading && "..."}
+                    {t.markAsSettled}{isClearLoading && "..."}
                   </button>
                 </div>
               </div>

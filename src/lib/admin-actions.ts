@@ -258,7 +258,7 @@ export async function recordPayment(
 }
 
 /** Clear the full pending balance for a user by creating a payment for the exact amount */
-export async function clearFullBalance(userId: string, carId: string) {
+export async function markAsSettled(userId: string, carId: string) {
   await requireAdmin();
 
   const { calculateUserPendingBreakdown } = await import("@/lib/cost-splitting");

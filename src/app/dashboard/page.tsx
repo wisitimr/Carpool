@@ -226,16 +226,14 @@ export default async function DashboardPage() {
         </section>
 
         {/* Recent */}
-        <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-              {t.recent}
-            </h2>
-          </div>
-          <div className="px-5 py-4 sm:px-6 sm:py-5">
-            {recentTrips.length === 0 ? (
-              <p className="text-sm text-gray-400">{t.noTripHistory}</p>
-            ) : (
+        {recentTrips.length > 0 && (
+          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+            <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
+                {t.recent}
+              </h2>
+            </div>
+            <div className="px-5 py-4 sm:px-6 sm:py-5">
               <div className="space-y-2">
                 {recentTrips.slice(0, 5).map((trip) => (
                   <div
@@ -266,18 +264,18 @@ export default async function DashboardPage() {
                   </div>
                 ))}
               </div>
-            )}
 
-            <div className="mt-4">
-              <a
-                href="/dashboard/history"
-                className="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow-md"
-              >
-                {t.viewAll}
-              </a>
+              <div className="mt-4">
+                <a
+                  href="/dashboard/history"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow-md"
+                >
+                  {t.viewAll}
+                </a>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Driver: Enter Costs */}
         {isAdmin && allCars.length > 0 && (
