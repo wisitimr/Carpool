@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useT } from "@/lib/i18n-context";
 
 interface ExistingCost {
@@ -26,6 +26,10 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
   const [date, setDate] = useState(getBangkokToday);
   const [existingCosts, setExistingCosts] = useState<ExistingCost[]>(initialCosts);
   const [missingDates, setMissingDates] = useState<string[]>(initialMissingDates);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("missing-dates-update", { detail: missingDates }));
+  }, [missingDates]);
 
   const existingForCar = existingCosts.find((c) => c.carId === carId);
 

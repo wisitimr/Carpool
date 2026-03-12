@@ -7,6 +7,7 @@ import { SignOutButton } from "@clerk/nextjs";
 import { headers } from "next/headers";
 import { detectLocale, getTranslations } from "@/lib/i18n";
 import CostForm from "./cost-form";
+import CostReminderBanner from "./cost-reminder-banner";
 import { todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
 
 export default async function DashboardPage() {
@@ -86,8 +87,6 @@ export default async function DashboardPage() {
     ),
   ].sort();
 
-  const hasMissingCosts = missingCostDates.length > 0;
-
   const myDebt = debts.find((d) => d.userId === userId);
 
   return (
@@ -126,16 +125,8 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {hasMissingCosts && (
-        <a
-          href="#enter-daily-costs"
-          className="animate-fade-in mb-4 block rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 shadow-sm transition hover:bg-amber-100 sm:mb-6"
-        >
-          <p className="font-medium">{t.costReminderBanner}</p>
-          <p className="mt-1 text-xs text-amber-600">
-            {t.missingDates}: {missingCostDates.join(", ")}
-          </p>
-        </a>
+      {myCars.length > 0 && (
+        <CostReminderBanner initialMissingDates={missingCostDates} />
       )}
 
       <div className="stagger-children space-y-4 sm:space-y-6">
