@@ -234,19 +234,22 @@ export default function HistoryContent({
 }: HistoryContentProps) {
   const [activeTab, setActiveTab] = useState<Tab>("trips");
   const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>("month");
-  const [dateFilter, setDateFilter] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const hasFilter = dateFrom !== "" || dateTo !== "";
 
   const filteredTrips = useMemo(() => {
-    if (!dateFilter) return trips;
-    return trips.filter((trip) => trip.dateISO === dateFilter);
-  }, [trips, dateFilter]);
+    if (!dateFrom && !dateTo) return trips;
+    return trips.filter((trip) => {
+      if (dateFrom && trip.dateISO < dateFrom) return false;
+      if (dateTo && trip.dateISO > dateTo) return false;
+      return true;
+    });
+  }, [trips, dateFrom, dateTo]);
 
   const tripScroll = useInfiniteScroll(filteredTrips);
-
-  const uniqueDates = useMemo(() => {
-    const dates = [...new Set(trips.map((t) => t.dateISO))].sort().reverse();
-    return dates;
-  }, [trips]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "trips", label: t.trips },
@@ -289,18 +292,55 @@ export default function HistoryContent({
       {/* Trips tab */}
       {activeTab === "trips" && (
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          {/* Date filter */}
+          {/* Date filter toggle */}
           <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:w-auto"
-            >
-              <option value="">{t.date}: —</option>
-              {uniqueDates.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  hasFilter
+                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                </svg>
+                {t.date}
+              </button>
+              {hasFilter && (
+                <button
+                  onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  className="rounded-lg px-2 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-600"
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+
+            {showFilter && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => {
+                      setDateFrom(e.target.value);
+                      if (!dateTo || e.target.value > dateTo) setDateTo(e.target.value);
+                    }}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <span className="text-xs text-gray-400">—</span>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    min={dateFrom}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="px-5 py-4 sm:px-6 sm:py-5">

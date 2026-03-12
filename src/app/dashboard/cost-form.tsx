@@ -162,31 +162,28 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
 
       {/* Car selector */}
       <div>
-        <div className="mb-1.5 flex items-center gap-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {t.car}
-          </label>
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+          {t.car}
+        </label>
+        <div className="flex items-center gap-2">
+          <select
+            value={carId}
+            onChange={(e) => handleCarChange(e.target.value)}
+            className={`${inputClass} flex-1`}
+          >
+            {cars.map((car) => (
+              <option key={car.id} value={car.id}>
+                {car.name}
+              </option>
+            ))}
+          </select>
           {existingForCar && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200 ring-inset">
-              <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-50 px-2.5 py-2 text-xs font-medium text-green-700 ring-1 ring-green-200 ring-inset sm:py-1.5">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
               {t.costsSaved}
             </span>
           )}
         </div>
-        <select
-          value={carId}
-          onChange={(e) => handleCarChange(e.target.value)}
-          className={inputClass}
-        >
-          {cars.map((car) => {
-            const hasCost = existingCosts.some((c) => c.carId === car.id);
-            return (
-              <option key={car.id} value={car.id}>
-                {hasCost ? "\u2713 " : ""}{car.name}
-              </option>
-            );
-          })}
-        </select>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
