@@ -28,12 +28,16 @@ export default async function DashboardPage() {
 
   const today = todayBangkok();
 
-  const [allCars, recentTrips, debts] =
+  const [allCars, ownedCar, recentTrips, debts] =
     await Promise.all([
       prisma.car.findMany({
         ...(isAdmin ? {} : { where: { ownerId: userId } }),
         select: { id: true, name: true, defaultGasCost: true },
         orderBy: { name: "asc" },
+      }),
+      prisma.car.findFirst({
+        where: { ownerId: userId },
+        select: { id: true },
       }),
       prisma.trip.findMany({
         where: { userId },
@@ -301,7 +305,7 @@ export default async function DashboardPage() {
                     };
                   })
                   .filter((d) => d.breakdown.length > 0)}
-                cars={allCars.map((c) => ({ id: c.id, name: c.name }))}
+                carId={ownedCar?.id ?? allCars[0]?.id ?? ""}
               />
             </div>
           </section>

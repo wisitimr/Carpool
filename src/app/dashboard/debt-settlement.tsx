@@ -24,22 +24,15 @@ interface DebtEntry {
 
 interface DebtSettlementProps {
   debts: DebtEntry[];
-  cars: { id: string; name: string }[];
+  carId: string;
 }
 
-export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
+export default function DebtSettlement({ debts, carId }: DebtSettlementProps) {
   const { t } = useT();
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [showCustom, setShowCustom] = useState<Set<string>>(new Set());
-  const [selectedCars, setSelectedCars] = useState<Record<string, string>>(() => {
-    const defaults: Record<string, string> = {};
-    for (const d of debts) {
-      defaults[d.userId] = cars[0]?.id ?? "";
-    }
-    return defaults;
-  });
 
   function toggle(set: Set<string>, id: string): Set<string> {
     const next = new Set(set);
@@ -49,11 +42,8 @@ export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
   }
 
   async function handleClearFull(userId: string) {
-    const carId = selectedCars[userId];
-    if (!carId) return;
     const user = debts.find((d) => d.userId === userId);
-    const carName = cars.find((c) => c.id === carId)?.name ?? "";
-    const summary = `${t.clearFullBalance}?\n\n${user?.userName ?? "Unknown"}\n${t.pending}: ฿${user?.pendingDebt.toFixed(2)}\n${t.car}: ${carName}`;
+    const summary = `${t.clearFullBalance}?\n\n${user?.userName ?? "Unknown"}\n${t.pending}: ฿${user?.pendingDebt.toFixed(2)}`;
     if (!confirm(summary)) return;
     setLoadingAction(`clear-${userId}`);
     try {
@@ -64,12 +54,10 @@ export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
   }
 
   async function handleRecordCustom(userId: string) {
-    const carId = selectedCars[userId];
     const amount = parseFloat(customAmounts[userId] || "0");
-    if (!carId || amount <= 0) return;
+    if (amount <= 0) return;
     const user = debts.find((d) => d.userId === userId);
-    const carName = cars.find((c) => c.id === carId)?.name ?? "";
-    const summary = `${t.recordPayment}?\n\n${user?.userName ?? "Unknown"}\n${t.amount}: ฿${amount.toFixed(2)}\n${t.car}: ${carName}`;
+    const summary = `${t.recordPayment}?\n\n${user?.userName ?? "Unknown"}\n${t.amount}: ฿${amount.toFixed(2)}`;
     if (!confirm(summary)) return;
     setLoadingAction(`record-${userId}`);
     try {
@@ -203,27 +191,6 @@ export default function DebtSettlement({ debts, cars }: DebtSettlementProps) {
                 {/* Custom amount form */}
                 {isCustomOpen && (
                   <div className="mt-2 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3 sm:flex-row sm:items-end">
-                    {cars.length > 1 && (
-                      <div className="sm:shrink-0">
-                        <label className="mb-1 block text-xs text-gray-500">{t.car}</label>
-                        <select
-                          value={selectedCars[d.userId] || ""}
-                          onChange={(e) =>
-                            setSelectedCars((prev) => ({
-                              ...prev,
-                              [d.userId]: e.target.value,
-                            }))
-                          }
-                          className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm sm:w-auto sm:py-1.5"
-                        >
-                          {cars.map((car) => (
-                            <option key={car.id} value={car.id}>
-                              {car.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
                     <div className="flex-1">
                       <label className="mb-1 block text-xs text-gray-500">
                         {t.amount}
