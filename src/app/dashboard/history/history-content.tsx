@@ -334,22 +334,32 @@ function DateFilterBar({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-500">Start</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => onFromChange(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+              <div className="relative">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => onFromChange(e.target.value)}
+                  className="absolute inset-0 z-10 w-full cursor-pointer opacity-0"
+                />
+                <div className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700">
+                  {dateFrom ? fmtDate(dateFrom, locale) : "\u00A0"}
+                </div>
+              </div>
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-500">End</label>
-              <input
-                type="date"
-                value={dateTo}
-                min={dateFrom}
-                onChange={(e) => onToChange(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+              <div className="relative">
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom}
+                  onChange={(e) => onToChange(e.target.value)}
+                  className="absolute inset-0 z-10 w-full cursor-pointer opacity-0"
+                />
+                <div className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700">
+                  {dateTo ? fmtDate(dateTo, locale) : "\u00A0"}
+                </div>
+              </div>
             </div>
           </div>
 

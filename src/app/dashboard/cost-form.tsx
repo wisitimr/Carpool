@@ -3,6 +3,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { useT } from "@/lib/i18n-context";
 
+function fmtDate(iso: string, locale: string) {
+  if (!iso) return "";
+  const loc = locale === "th" ? "th-TH-u-ca-buddhist" : "en-US";
+  return new Date(iso + "T00:00:00").toLocaleDateString(loc, { day: "numeric", month: "short", year: "numeric" });
+}
+
 interface ExistingCost {
   carId: string;
   gasCost: number;
@@ -21,7 +27,7 @@ function getBangkokToday() {
 }
 
 export default function CostForm({ cars, existingCosts: initialCosts, missingCostDates: initialMissingDates = [] }: CostFormProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
   const [date, setDate] = useState(getBangkokToday);
   const [existingCosts, setExistingCosts] = useState<ExistingCost[]>(initialCosts);
@@ -161,12 +167,17 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
         <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
           {t.date}
         </label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => handleDateChange(e.target.value)}
-          className={inputClass}
-        />
+        <div className="relative">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => handleDateChange(e.target.value)}
+            className={`${inputClass} opacity-0 absolute inset-0 z-10 cursor-pointer`}
+          />
+          <div className={inputClass}>
+            {fmtDate(date, locale)}
+          </div>
+        </div>
       </div>
 
       {/* Car selector */}
