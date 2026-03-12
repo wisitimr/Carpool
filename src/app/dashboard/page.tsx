@@ -103,6 +103,7 @@ export default async function DashboardPage() {
             image={user.image}
             name={user.name}
             email={user.email}
+            role={user.role}
             isAdmin={isAdmin}
           />
         </div>

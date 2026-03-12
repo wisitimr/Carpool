@@ -8,10 +8,21 @@ interface ProfileMenuProps {
   image: string | null;
   name: string | null;
   email: string;
+  role: string;
   isAdmin: boolean;
 }
 
-export default function ProfileMenu({ image, name, email, isAdmin }: ProfileMenuProps) {
+const roleLabel: Record<string, string> = {
+  ADMIN: "ADMIN",
+  USER: "PASSENGER",
+};
+
+const roleBadge: Record<string, string> = {
+  ADMIN: "bg-red-50 text-red-600 ring-red-500/20",
+  USER: "bg-green-50 text-green-700 ring-green-500/20",
+};
+
+export default function ProfileMenu({ image, name, email, role, isAdmin }: ProfileMenuProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -32,12 +43,11 @@ export default function ProfileMenu({ image, name, email, isAdmin }: ProfileMenu
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2.5 rounded-full py-1 pl-3 pr-1 transition hover:bg-gray-100"
       >
-        <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">{name ?? email}</p>
-          {isAdmin && (
-            <p className="text-xs font-semibold text-red-600">{t.admin}</p>
-          )}
-        </div>
+        {(role === "ADMIN" || role === "USER") && (
+          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${roleBadge[role]}`}>
+            {roleLabel[role]}
+          </span>
+        )}
         <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full ring-2 ring-gray-200">
           {image ? (
             <img src={image} alt={name ?? ""} className="h-full w-full object-cover" />
