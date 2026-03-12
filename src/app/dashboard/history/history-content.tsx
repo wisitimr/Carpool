@@ -428,21 +428,6 @@ function SummaryCard({
       </button>
       {isExpanded && (
         <div className="border-t border-gray-100 px-4 pb-3 pt-2">
-          {/* Aggregate totals — only for day view (month/year drill down into sub-periods instead) */}
-          {period === "day" && (
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-              {(entry.outboundCount > 0 || entry.returnCount > 0) && (
-                <span>
-                  {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
-                  {entry.outboundCount > 0 && entry.returnCount > 0 && " · "}
-                  {entry.returnCount > 0 && <span className="text-indigo-700">{t.return} ({entry.returnCount})</span>}
-                </span>
-              )}
-              {entry.gasTotal > 0 && <span>{t.gas}: ฿{entry.gasTotal.toFixed(2)}</span>}
-              {entry.parkingTotal > 0 && <span>{t.parking}: ฿{entry.parkingTotal.toFixed(2)}</span>}
-            </div>
-          )}
-
           {/* Day view: per-car detail */}
           {period === "day" && Array.isArray(subData) && (subData as BreakdownEntry[]).length > 0 && (
             <div className="mt-2">
@@ -475,7 +460,7 @@ function SummaryCard({
                   key={month.monthKey}
                   label={month.label}
                   total={month.total}
-                  isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}`)}
+                  isExpanded={!expandedSubPeriods.has(`${group.key}_${month.monthKey}`)}
                   onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}`)}
                 >
                   {month.days.map((day) => (
