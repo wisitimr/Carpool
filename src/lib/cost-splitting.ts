@@ -53,46 +53,46 @@ export async function calculateDebts(
 
     if (trips.length === 0) continue;
 
-    // Count trips per user (1 = one way, 2 = round trip)
-    const userTrips = new Map<string, { name: string | null; count: number }>();
+    // Track which users have outbound/return trips
+    const userNames = new Map<string, string | null>();
+    const outboundUsers = new Set<string>();
+    const returnUsers = new Set<string>();
     for (const trip of trips) {
-      const existing = userTrips.get(trip.userId);
-      if (existing) {
-        existing.count++;
-      } else {
-        userTrips.set(trip.userId, { name: trip.user.name, count: 1 });
-      }
+      userNames.set(trip.userId, trip.user.name);
+      if (trip.type === "OUTBOUND") outboundUsers.add(trip.userId);
+      else returnUsers.add(trip.userId);
     }
 
-    // Count outbound/return per user
-    const userTripTypes = new Map<string, { outbound: number; return: number }>();
-    for (const trip of trips) {
-      const existing = userTripTypes.get(trip.userId) ?? { outbound: 0, return: 0 };
-      if (trip.type === "OUTBOUND") existing.outbound++;
-      else existing.return++;
-      userTripTypes.set(trip.userId, existing);
-    }
+    // Include driver in both leg headcounts (driver always travels both legs)
+    const outboundHeadcount = outboundUsers.size + (outboundUsers.has(cost.car.ownerId) ? 0 : 1);
+    const returnHeadcount = returnUsers.size + (returnUsers.has(cost.car.ownerId) ? 0 : 1);
 
-    const distinctUsers = userTrips.size;
-    // Include driver (car owner) in parking split even if they didn't tap
-    const parkingHeadcount = userTrips.has(cost.car.ownerId) ? distinctUsers : distinctUsers + 1;
+    // Gas: split total daily cost in half per leg, then divide by headcount per leg
+    const gasPerLeg = cost.gasCost / 2;
+    // Parking: only split among outbound riders (including driver)
+    const parkingHeadcount = outboundHeadcount;
 
-    for (const [uid, info] of userTrips) {
+    const allUsers = new Set([...outboundUsers, ...returnUsers]);
+    for (const uid of allUsers) {
       // Skip the car owner — they are the driver and don't owe debt
       if (uid === cost.car.ownerId) continue;
 
-      // Gas: per-trip cost (outbound+return = gasCost*2, one way = gasCost*1)
-      const gasShare = cost.gasCost * info.count;
-      // Parking: split equally among all riders + driver that day
-      const parkingShare = parkingHeadcount > 0 ? cost.parkingCost / parkingHeadcount : 0;
+      const hasOutbound = outboundUsers.has(uid);
+      const hasReturn = returnUsers.has(uid);
+
+      // Gas: per-leg share based on headcount for that leg
+      const gasOutbound = hasOutbound ? gasPerLeg / outboundHeadcount : 0;
+      const gasReturn = hasReturn ? gasPerLeg / returnHeadcount : 0;
+      const gasShare = gasOutbound + gasReturn;
+      // Parking: only outbound riders pay, split by outbound headcount
+      const parkingShare = hasOutbound && parkingHeadcount > 0 ? cost.parkingCost / parkingHeadcount : 0;
       const share = gasShare + parkingShare;
-      const tripTypes = userTripTypes.get(uid) ?? { outbound: 0, return: 0 };
 
       let entry = debtMap.get(uid);
       if (!entry) {
         entry = {
           userId: uid,
-          userName: info.name,
+          userName: userNames.get(uid) ?? null,
           totalDebt: 0,
           totalPaid: 0,
           pendingDebt: 0,
@@ -109,8 +109,8 @@ export async function calculateDebts(
         share: Math.round(share * 100) / 100,
         gasShare: Math.round(gasShare * 100) / 100,
         parkingShare: Math.round(parkingShare * 100) / 100,
-        outboundCount: tripTypes.outbound,
-        returnCount: tripTypes.return,
+        outboundCount: hasOutbound ? 1 : 0,
+        returnCount: hasReturn ? 1 : 0,
         totalCost: cost.gasCost + cost.parkingCost,
         passengerCount: parkingHeadcount,
       });
@@ -166,25 +166,32 @@ export async function calculateUserPendingBreakdown(userId: string): Promise<{
 
     if (trips.length === 0) continue;
 
-    const userTrips = new Map<string, number>();
-    for (const t of trips) {
-      userTrips.set(t.userId, (userTrips.get(t.userId) ?? 0) + 1);
-    }
-
     // Skip if user is the car owner (driver doesn't owe debt)
     if (userId === cost.car.ownerId) continue;
 
-    const myTrips = userTrips.get(userId);
-    if (!myTrips) continue;
+    // Track outbound/return riders separately
+    const outboundUsers = new Set<string>();
+    const returnUsers = new Set<string>();
+    for (const t of trips) {
+      if (t.type === "OUTBOUND") outboundUsers.add(t.userId);
+      else returnUsers.add(t.userId);
+    }
 
-    const distinctUsers = userTrips.size;
-    // Include driver (car owner) in parking split even if they didn't tap
-    const parkingHeadcount = userTrips.has(cost.car.ownerId) ? distinctUsers : distinctUsers + 1;
+    const hasOutbound = outboundUsers.has(userId);
+    const hasReturn = returnUsers.has(userId);
+    if (!hasOutbound && !hasReturn) continue;
 
-    // Gas: per-trip cost (outbound+return = gasCost*2, one way = gasCost*1)
-    const gasShare = cost.gasCost * myTrips;
-    // Parking: split equally among all riders + driver that day
-    const parkingShare = parkingHeadcount > 0 ? cost.parkingCost / parkingHeadcount : 0;
+    // Include driver in both leg headcounts
+    const outboundHeadcount = outboundUsers.size + (outboundUsers.has(cost.car.ownerId) ? 0 : 1);
+    const returnHeadcount = returnUsers.size + (returnUsers.has(cost.car.ownerId) ? 0 : 1);
+
+    // Gas: split total daily cost in half per leg, divide by headcount per leg
+    const gasPerLeg = cost.gasCost / 2;
+    const gasOutbound = hasOutbound ? gasPerLeg / outboundHeadcount : 0;
+    const gasReturn = hasReturn ? gasPerLeg / returnHeadcount : 0;
+    const gasShare = gasOutbound + gasReturn;
+    // Parking: only outbound riders pay, split by outbound headcount
+    const parkingShare = hasOutbound && outboundHeadcount > 0 ? cost.parkingCost / outboundHeadcount : 0;
     const share = Math.round((gasShare + parkingShare) * 100) / 100;
 
     if (share > 0) {
