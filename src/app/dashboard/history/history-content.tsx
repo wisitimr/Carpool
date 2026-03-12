@@ -46,7 +46,7 @@ interface DebtWithBreakdown {
 interface GroupedPeriod {
   key: string; // ISO date, YYYY-MM, or YYYY
   label: string;
-  entries: { userId: string; userName: string | null; totalDebt: number; totalPaid: number; pendingDebt: number }[];
+  entries: { userId: string; userName: string | null; totalDebt: number; totalPaid: number; pendingDebt: number; gasTotal: number; parkingTotal: number; outboundCount: number; returnCount: number }[];
 }
 
 interface HistoryContentProps {
@@ -210,67 +210,52 @@ function useInfiniteScroll<T>(items: T[]) {
 }
 
 function SummaryTable({
-  entries,
-  currentUserId,
+  entry,
   label,
   isDaily,
   t,
 }: {
-  entries: GroupedPeriod["entries"];
-  currentUserId: string;
+  entry: GroupedPeriod["entries"][0];
   label: string;
   isDaily: boolean;
   t: HistoryContentProps["t"];
 }) {
   return (
-    <div>
-      <p className="mb-3 text-xs font-medium text-gray-500">{label}</p>
-      <div className="space-y-2">
-        {entries.map((d) => {
-          const isMe = d.userId === currentUserId;
-          return (
-            <div
-              key={d.userId}
-              className={`rounded-xl px-4 py-3 ${
-                isMe
-                  ? "bg-blue-50 ring-1 ring-blue-200"
-                  : "bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-gray-800">
-                  {d.userName ?? "Unknown"}
-                  {isMe && (
-                    <span className="ml-1.5 text-xs font-normal text-blue-500">
-                      ({t.you})
-                    </span>
-                  )}
-                </p>
-                {isDaily ? (
-                  <p className="font-bold text-gray-800">
-                    ฿{d.totalDebt.toFixed(2)}
-                  </p>
-                ) : (
-                  <p className={`font-bold ${d.pendingDebt > 0 ? "text-red-600" : "text-green-600"}`}>
-                    ฿{Math.abs(d.pendingDebt).toFixed(2)}
-                    {d.pendingDebt <= 0 && (
-                      <svg className="ml-1 inline h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                    )}
-                  </p>
-                )}
-              </div>
-              {!isDaily && (
-                <div className="mt-1 flex gap-3 text-xs text-gray-500">
-                  <span>{t.accrued}: ฿{d.totalDebt.toFixed(2)}</span>
-                  <span className="text-green-600">
-                    {t.paid}: ฿{d.totalPaid.toFixed(2)}
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        })}
+    <div className="rounded-xl bg-blue-50 px-4 py-3 ring-1 ring-blue-200">
+      <p className="mb-2 text-xs font-medium text-gray-500">{label}</p>
+      <div className="flex items-center justify-between">
+        <p className="font-bold text-gray-800">
+          ฿{entry.totalDebt.toFixed(2)}
+        </p>
+        {!isDaily && (
+          <p className={`font-bold ${entry.pendingDebt > 0 ? "text-red-600" : "text-green-600"}`}>
+            {entry.pendingDebt > 0 ? (
+              <>{t.pending}: ฿{entry.pendingDebt.toFixed(2)}</>
+            ) : (
+              <>
+                ฿0.00
+                <svg className="ml-1 inline h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+              </>
+            )}
+          </p>
+        )}
       </div>
+      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+        {(entry.outboundCount > 0 || entry.returnCount > 0) && (
+          <span>
+            {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
+            {entry.outboundCount > 0 && entry.returnCount > 0 && " · "}
+            {entry.returnCount > 0 && <span className="text-indigo-700">{t.return} ({entry.returnCount})</span>}
+          </span>
+        )}
+        {entry.gasTotal > 0 && <span>{t.gas}: ฿{entry.gasTotal.toFixed(2)}</span>}
+        {entry.parkingTotal > 0 && <span>{t.parking}: ฿{entry.parkingTotal.toFixed(2)}</span>}
+      </div>
+      {!isDaily && entry.totalPaid > 0 && (
+        <div className="mt-1 text-xs text-green-600">
+          {t.paid}: ฿{entry.totalPaid.toFixed(2)}
+        </div>
+      )}
     </div>
   );
 }
@@ -381,17 +366,27 @@ function groupByPeriod(
 
   const periodKeys = new Set<string>();
   const userPeriodDebt = new Map<string, Map<string, number>>();
+  const userPeriodGas = new Map<string, Map<string, number>>();
+  const userPeriodParking = new Map<string, Map<string, number>>();
+  const userPeriodOutbound = new Map<string, Map<string, number>>();
+  const userPeriodReturn = new Map<string, Map<string, number>>();
 
   for (const debt of allDebts) {
     for (const b of debt.breakdown) {
       const key = getKey(b.date);
       periodKeys.add(key);
 
-      if (!userPeriodDebt.has(debt.userId)) {
-        userPeriodDebt.set(debt.userId, new Map());
+      for (const [map, val] of [
+        [userPeriodDebt, b.share],
+        [userPeriodGas, b.gasShare],
+        [userPeriodParking, b.parkingShare],
+        [userPeriodOutbound, b.outboundCount],
+        [userPeriodReturn, b.returnCount],
+      ] as [Map<string, Map<string, number>>, number][]) {
+        if (!map.has(debt.userId)) map.set(debt.userId, new Map());
+        const pm = map.get(debt.userId)!;
+        pm.set(key, (pm.get(key) ?? 0) + val);
       }
-      const periodMap = userPeriodDebt.get(debt.userId)!;
-      periodMap.set(key, (periodMap.get(key) ?? 0) + b.share);
     }
   }
 
@@ -433,6 +428,10 @@ function groupByPeriod(
         totalDebt,
         totalPaid,
         pendingDebt: Math.round((totalDebt - totalPaid) * 100) / 100,
+        gasTotal: Math.round((userPeriodGas.get(uid)?.get(key) ?? 0) * 100) / 100,
+        parkingTotal: Math.round((userPeriodParking.get(uid)?.get(key) ?? 0) * 100) / 100,
+        outboundCount: userPeriodOutbound.get(uid)?.get(key) ?? 0,
+        returnCount: userPeriodReturn.get(uid)?.get(key) ?? 0,
       });
     }
 
@@ -567,11 +566,16 @@ export default function HistoryContent({
   const tripScroll = useInfiniteScroll(filteredTrips);
   const paymentScroll = useInfiniteScroll(filteredPayments);
 
-  // Group summary data by period
-  const summaryGroups = useMemo(
-    () => groupByPeriod(allDebts, allPayments, summaryPeriod),
-    [allDebts, allPayments, summaryPeriod]
-  );
+  // Group summary data by period, filtered to current user only
+  const summaryGroups = useMemo(() => {
+    const groups = groupByPeriod(allDebts, allPayments, summaryPeriod);
+    return groups
+      .map((g) => ({
+        ...g,
+        entries: g.entries.filter((e) => e.userId === currentUserId),
+      }))
+      .filter((g) => g.entries.length > 0);
+  }, [allDebts, allPayments, summaryPeriod, currentUserId]);
 
   const summaryScroll = useInfiniteScroll(summaryGroups);
 
@@ -923,8 +927,7 @@ export default function HistoryContent({
                 {summaryScroll.visible.map((group) => (
                   <SummaryTable
                     key={group.key}
-                    entries={group.entries}
-                    currentUserId={currentUserId}
+                    entry={group.entries[0]}
                     label={group.label}
                     isDaily={summaryPeriod === "day"}
                     t={t}
