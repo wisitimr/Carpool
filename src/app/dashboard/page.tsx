@@ -28,11 +28,12 @@ export default async function DashboardPage() {
 
   const today = todayBangkok();
 
-  const [myCars, recentTrips, debts] =
+  const [allCars, recentTrips, debts] =
     await Promise.all([
       prisma.car.findMany({
-        where: { ownerId: userId },
+        ...(isAdmin ? {} : { where: { ownerId: userId } }),
         select: { id: true, name: true, defaultGasCost: true },
+        orderBy: { name: "asc" },
       }),
       prisma.trip.findMany({
         where: { userId },
@@ -43,10 +44,10 @@ export default async function DashboardPage() {
       calculateDebts(startOfMonth, endOfMonth),
     ]);
 
-  const carIds = myCars.map((c) => c.id);
+  const carIds = allCars.map((c) => c.id);
 
   // Find dates with trips for my cars but missing cost entries
-  const [tripsForMyCars, costsThisMonth, todayCosts] = myCars.length > 0
+  const [tripsForMyCars, costsThisMonth, todayCosts] = allCars.length > 0
     ? await Promise.all([
         prisma.trip.findMany({
           where: {
@@ -109,7 +110,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {isAdmin && myCars.length > 0 && (
+      {isAdmin && allCars.length > 0 && (
         <CostReminderBanner initialMissingDates={missingCostDates} />
       )}
 
@@ -252,7 +253,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Driver: Enter Costs */}
-        {isAdmin && myCars.length > 0 && (
+        {isAdmin && allCars.length > 0 && (
           <section id="enter-daily-costs" className="scroll-mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
             <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
@@ -261,7 +262,7 @@ export default async function DashboardPage() {
             </div>
             <div className="px-5 py-4 sm:px-6 sm:py-5">
               <CostForm
-                cars={myCars.map((c) => ({ id: c.id, name: c.name, defaultGasCost: c.defaultGasCost }))}
+                cars={allCars.map((c) => ({ id: c.id, name: c.name, defaultGasCost: c.defaultGasCost }))}
                 existingCosts={todayCosts.map((tc) => ({ carId: tc.carId, gasCost: tc.gasCost, parkingCost: tc.parkingCost }))}
                 missingCostDates={missingCostDates}
               />
@@ -300,7 +301,7 @@ export default async function DashboardPage() {
                     };
                   })
                   .filter((d) => d.breakdown.length > 0)}
-                cars={myCars.map((c) => ({ id: c.id, name: c.name }))}
+                cars={allCars.map((c) => ({ id: c.id, name: c.name }))}
               />
             </div>
           </section>

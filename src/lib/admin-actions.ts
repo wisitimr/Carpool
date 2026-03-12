@@ -86,12 +86,11 @@ export async function updateDailyCost(
   gasCost: number,
   parkingCost: number
 ) {
-  const admin = await requireAdmin();
+  await requireAdmin();
 
-  // Verify the admin owns this car
   const car = await prisma.car.findUnique({ where: { id: carId } });
-  if (!car || car.ownerId !== admin.id) {
-    throw new Error("Forbidden: you do not own this car");
+  if (!car) {
+    throw new Error("Car not found");
   }
 
   const parsedDate = new Date(date);
@@ -111,11 +110,11 @@ export async function updateDailyCost(
 // ---------------------------------------------------------------------------
 
 export async function updateDefaultGasCost(carId: string, gasCost: number) {
-  const admin = await requireAdmin();
+  await requireAdmin();
 
   const car = await prisma.car.findUnique({ where: { id: carId } });
-  if (!car || car.ownerId !== admin.id) {
-    throw new Error("Forbidden: you do not own this car");
+  if (!car) {
+    throw new Error("Car not found");
   }
 
   await prisma.car.update({
