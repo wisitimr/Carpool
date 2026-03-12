@@ -118,7 +118,7 @@ export default async function DashboardPage() {
       </header>
 
       {isAdmin && allCars.length > 0 && (
-        <CostReminderBanner initialMissingDates={missingCostDates} />
+        <CostReminderBanner initialMissingDates={missingCostDates} cars={allCars.map((c) => ({ id: c.id, name: c.name }))} />
       )}
 
       <div className="stagger-children space-y-4 sm:space-y-6">
