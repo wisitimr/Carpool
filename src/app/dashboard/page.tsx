@@ -298,6 +298,14 @@ export default async function DashboardPage() {
                   pendingDebt: d.pendingDebt,
                   totalDebt: d.totalDebt,
                   totalPaid: d.totalPaid,
+                  breakdown: d.breakdown.map((b) => ({
+                    carName: b.carName,
+                    date: b.date.toLocaleDateString(locale),
+                    share: b.share,
+                    gasShare: b.gasShare,
+                    parkingShare: b.parkingShare,
+                    passengerCount: b.passengerCount,
+                  })),
                 }))}
                 cars={myCars.map((c) => ({ id: c.id, name: c.name }))}
               />
