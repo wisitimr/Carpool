@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useT } from "@/lib/i18n-context";
 
 function fmtDate(iso: string, locale: string) {
@@ -33,6 +34,7 @@ function getBangkokToday() {
 
 export default function CostForm({ cars, existingCosts: initialCosts, missingCostDates: initialMissingDates = [] }: CostFormProps) {
   const { t, locale } = useT();
+  const router = useRouter();
   const dateInputRef = useRef<HTMLInputElement>(null);
   const [carId, setCarId] = useState(cars[0]?.id ?? "");
   const [date, setDate] = useState(getBangkokToday);
@@ -125,6 +127,8 @@ export default function CostForm({ cars, existingCosts: initialCosts, missingCos
       setExistingCosts(updatedCosts);
       // Remove the specific car+date entry from missing
       setMissingDates((prev) => prev.filter((e) => !(e.carId === carId && e.date === date)));
+      // Refresh server data so debt settlement updates
+      router.refresh();
     } catch {
       setStatus("error");
     }
