@@ -54,6 +54,7 @@ interface HistoryContentProps {
   allDebts: DebtWithBreakdown[];
   allPayments: PaymentRecord[];
   currentUserId: string;
+  locale: string;
   t: {
     trips: string;
     payments: string;
@@ -90,10 +91,12 @@ function Calendar({
   dateFrom,
   dateTo,
   onSelect,
+  locale,
 }: {
   dateFrom: string;
   dateTo: string;
   onSelect: (iso: string) => void;
+  locale: string;
 }) {
   const [viewDate, setViewDate] = useState(() => {
     if (dateFrom) return new Date(dateFrom + "T00:00:00");
@@ -131,7 +134,7 @@ function Calendar({
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
         </button>
         <span className="text-sm font-semibold text-gray-700">
-          {viewDate.toLocaleString("default", { month: "long", year: "numeric" })}
+          {viewDate.toLocaleDateString(locale === "th" ? "th-TH-u-ca-buddhist" : locale, { month: "long", year: "numeric" })}
         </span>
         <button type="button" onClick={nextMonth} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
@@ -258,6 +261,7 @@ function DateFilterBar({
   onClear,
   onCalendarSelect,
   dateLabel,
+  locale,
 }: {
   show: boolean;
   onToggle: () => void;
@@ -269,6 +273,7 @@ function DateFilterBar({
   onClear: () => void;
   onCalendarSelect: (iso: string) => void;
   dateLabel: string;
+  locale: string;
 }) {
   return (
     <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
@@ -329,6 +334,7 @@ function DateFilterBar({
             dateFrom={dateFrom}
             dateTo={dateTo || dateFrom}
             onSelect={onCalendarSelect}
+            locale={locale}
           />
         </div>
       )}
@@ -343,7 +349,8 @@ function DateFilterBar({
 function groupByPeriod(
   allDebts: DebtWithBreakdown[],
   allPayments: PaymentRecord[],
-  period: SummaryPeriod
+  period: SummaryPeriod,
+  locale: string
 ): GroupedPeriod[] {
   function getKey(isoDate: string): string {
     if (period === "day") return isoDate;
@@ -425,10 +432,17 @@ function groupByPeriod(
     entries.sort((a, b) => b.pendingDebt - a.pendingDebt);
 
     let label = key;
-    if (period === "month") {
+    const loc = locale === "th" ? "th-TH-u-ca-buddhist" : locale;
+    if (period === "day") {
+      const d = new Date(key + "T00:00:00");
+      label = d.toLocaleDateString(loc, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    } else if (period === "month") {
       const [y, m] = key.split("-");
       const d = new Date(parseInt(y), parseInt(m) - 1, 1);
-      label = d.toLocaleString("default", { month: "long", year: "numeric" });
+      label = d.toLocaleDateString(loc, { month: "long", year: "numeric" });
+    } else {
+      const d = new Date(parseInt(key), 0, 1);
+      label = d.toLocaleDateString(loc, { year: "numeric" });
     }
 
     groups.push({ key, label, entries });
@@ -443,6 +457,7 @@ export default function HistoryContent({
   allDebts,
   allPayments,
   currentUserId,
+  locale,
   t,
 }: HistoryContentProps) {
   const [activeTab, setActiveTab] = useState<Tab>("trips");
@@ -555,14 +570,14 @@ export default function HistoryContent({
 
   // Group summary data by period, filtered to current user only
   const summaryGroups = useMemo(() => {
-    const groups = groupByPeriod(allDebts, allPayments, summaryPeriod);
+    const groups = groupByPeriod(allDebts, allPayments, summaryPeriod, locale);
     return groups
       .map((g) => ({
         ...g,
         entries: g.entries.filter((e) => e.userId === currentUserId),
       }))
       .filter((g) => g.entries.length > 0);
-  }, [allDebts, allPayments, summaryPeriod, currentUserId]);
+  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId]);
 
   const summaryScroll = useInfiniteScroll(summaryGroups);
 
@@ -611,6 +626,7 @@ export default function HistoryContent({
             onClear={clearTripFilter}
             onCalendarSelect={handleTripCalendarSelect}
             dateLabel={t.date}
+            locale={locale}
           />
 
           <div className="px-5 py-4 sm:px-6 sm:py-5">
@@ -703,6 +719,7 @@ export default function HistoryContent({
             onClear={clearPaymentFilter}
             onCalendarSelect={handlePayCalendarSelect}
             dateLabel={t.date}
+            locale={locale}
           />
           <div className="px-5 py-4 sm:px-6 sm:py-5">
             {filteredPayments.length === 0 ? (

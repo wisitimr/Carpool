@@ -279,3 +279,23 @@ export function detectLocale(acceptLanguage?: string | null): Locale {
   if (lang.startsWith("th")) return "th";
   return "en";
 }
+
+/** Get the BCP 47 locale string with Buddhist calendar for Thai */
+export function dateLocale(locale: Locale): string {
+  return locale === "th" ? "th-TH-u-ca-buddhist" : locale;
+}
+
+/** Format a date with full weekday, day, month, year (Buddhist Era for Thai) */
+export function formatDateFull(date: Date, locale: Locale): string {
+  return date.toLocaleDateString(dateLocale(locale), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** Format a date as short date (day/month/year with Buddhist Era for Thai) */
+export function formatDate(date: Date, locale: Locale): string {
+  return date.toLocaleDateString(dateLocale(locale));
+}

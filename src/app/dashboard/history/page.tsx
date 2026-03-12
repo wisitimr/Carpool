@@ -39,7 +39,7 @@ export default async function HistoryPage() {
   const trips = recentTrips.map((trip) => ({
     id: trip.id,
     carName: trip.car.name,
-    date: trip.date.toLocaleDateString(locale),
+    date: trip.date.toLocaleDateString(locale === "th" ? "th-TH-u-ca-buddhist" : locale),
     dateISO: trip.date.toISOString().split("T")[0],
     time: trip.tappedAt.toLocaleTimeString(locale, {
       hour: "2-digit",
@@ -70,7 +70,7 @@ export default async function HistoryPage() {
     userId: p.userId,
     userName: p.user.name,
     carName: p.car.name,
-    date: p.date.toLocaleDateString(locale),
+    date: p.date.toLocaleDateString(locale === "th" ? "th-TH-u-ca-buddhist" : locale),
     dateISO: p.date.toISOString().split("T")[0],
     amount: p.amount,
     note: p.note,
@@ -95,6 +95,7 @@ export default async function HistoryPage() {
         allDebts={serializedDebts}
         allPayments={serializedPayments}
         currentUserId={userId}
+        locale={locale}
         t={{
           trips: t.trips,
           payments: t.payments,

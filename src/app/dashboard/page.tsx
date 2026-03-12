@@ -178,7 +178,7 @@ export default async function DashboardPage() {
                             <div className="flex items-center justify-between gap-3">
                               <span className="min-w-0 truncate text-gray-600">
                                 {b.carName} &mdash;{" "}
-                                {b.date.toLocaleDateString(locale)} ({b.passengerCount} {t.riders})
+                                {b.date.toLocaleDateString(locale === "th" ? "th-TH-u-ca-buddhist" : locale)} ({b.passengerCount} {t.riders})
                               </span>
                               <span className="shrink-0 font-medium text-gray-900">
                                 ฿{b.share.toFixed(2)}
@@ -232,7 +232,7 @@ export default async function DashboardPage() {
                         {trip.car.name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {trip.date.toLocaleDateString(locale)} &middot;{" "}
+                        {trip.date.toLocaleDateString(locale === "th" ? "th-TH-u-ca-buddhist" : locale)} &middot;{" "}
                         {trip.tappedAt.toLocaleTimeString(locale, {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -300,7 +300,7 @@ export default async function DashboardPage() {
                   totalPaid: d.totalPaid,
                   breakdown: d.breakdown.map((b) => ({
                     carName: b.carName,
-                    date: b.date.toLocaleDateString(locale),
+                    date: b.date.toLocaleDateString(locale === "th" ? "th-TH-u-ca-buddhist" : locale),
                     share: b.share,
                     gasShare: b.gasShare,
                     parkingShare: b.parkingShare,
