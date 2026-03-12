@@ -32,6 +32,15 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = user.id;
+
+  // --- Check: owner cannot tap their own car ---
+  if (userId === car.ownerId) {
+    const successUrl = new URL("/tap-success", request.url);
+    successUrl.searchParams.set("status", "owner");
+    successUrl.searchParams.set("car", car.name);
+    return NextResponse.redirect(successUrl);
+  }
+
   const now = nowBangkok();
   const today = todayBangkok();
 

@@ -78,6 +78,9 @@ export async function calculateDebts(
     const parkingHeadcount = userTrips.has(cost.car.ownerId) ? distinctUsers : distinctUsers + 1;
 
     for (const [uid, info] of userTrips) {
+      // Skip the car owner — they are the driver and don't owe debt
+      if (uid === cost.car.ownerId) continue;
+
       // Gas: per-trip cost (outbound+return = gasCost*2, one way = gasCost*1)
       const gasShare = cost.gasCost * info.count;
       // Parking: split equally among all riders + driver that day
@@ -167,6 +170,9 @@ export async function calculateUserPendingBreakdown(userId: string): Promise<{
     for (const t of trips) {
       userTrips.set(t.userId, (userTrips.get(t.userId) ?? 0) + 1);
     }
+
+    // Skip if user is the car owner (driver doesn't owe debt)
+    if (userId === cost.car.ownerId) continue;
 
     const myTrips = userTrips.get(userId);
     if (!myTrips) continue;

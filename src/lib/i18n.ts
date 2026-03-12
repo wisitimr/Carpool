@@ -134,6 +134,10 @@ const translations = {
     tapReceived: "Tap Received",
     tapProcessed: "Your tap has been processed.",
 
+    // Tap
+    ownerCannotCheckIn: "Owner Cannot Check In",
+    ownerCannotCheckInDesc: "You are the owner of this car. Only passengers need to check in.",
+
     // Pending Approval
     pendingApprovalTitle: "Pending Approval",
     pendingApprovalDesc: "Your account is awaiting approval from an administrator. You will be able to use the carpool system once approved.",
@@ -271,6 +275,10 @@ const translations = {
     systemDisabledDesc: "ระบบ Carpool ปิดสำหรับวันนี้",
     tapReceived: "รับการแตะแล้ว",
     tapProcessed: "การแตะของคุณถูกประมวลผลแล้ว",
+
+    // Tap
+    ownerCannotCheckIn: "เจ้าของรถไม่ต้องเช็คอิน",
+    ownerCannotCheckInDesc: "คุณเป็นเจ้าของรถคันนี้ เฉพาะผู้โดยสารเท่านั้นที่ต้องเช็คอิน",
 
     // Pending Approval
     pendingApprovalTitle: "รอการอนุมัติ",
