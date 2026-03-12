@@ -208,17 +208,21 @@ function DebtTable({
   currentUserId,
   emptyMessage,
   label,
+  period,
   t,
 }: {
   debts: DebtSummary[];
   currentUserId: string;
   emptyMessage: string;
   label: string;
+  period: SummaryPeriod;
   t: HistoryContentProps["t"];
 }) {
   if (debts.length === 0) {
     return <p className="text-sm text-gray-400">{emptyMessage}</p>;
   }
+
+  const isDaily = period === "day";
 
   return (
     <>
@@ -244,19 +248,27 @@ function DebtTable({
                     </span>
                   )}
                 </p>
-                <p className={`font-bold ${d.pendingDebt > 0 ? "text-red-600" : "text-green-600"}`}>
-                  ฿{Math.abs(d.pendingDebt).toFixed(2)}
-                  {d.pendingDebt <= 0 && (
-                    <svg className="ml-1 inline h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                  )}
-                </p>
+                {isDaily ? (
+                  <p className="font-bold text-gray-800">
+                    ฿{d.totalDebt.toFixed(2)}
+                  </p>
+                ) : (
+                  <p className={`font-bold ${d.pendingDebt > 0 ? "text-red-600" : "text-green-600"}`}>
+                    ฿{Math.abs(d.pendingDebt).toFixed(2)}
+                    {d.pendingDebt <= 0 && (
+                      <svg className="ml-1 inline h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    )}
+                  </p>
+                )}
               </div>
-              <div className="mt-1 flex gap-3 text-xs text-gray-500">
-                <span>{t.accrued}: ฿{d.totalDebt.toFixed(2)}</span>
-                <span className="text-green-600">
-                  {t.paid}: ฿{d.totalPaid.toFixed(2)}
-                </span>
-              </div>
+              {!isDaily && (
+                <div className="mt-1 flex gap-3 text-xs text-gray-500">
+                  <span>{t.accrued}: ฿{d.totalDebt.toFixed(2)}</span>
+                  <span className="text-green-600">
+                    {t.paid}: ฿{d.totalPaid.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -621,6 +633,7 @@ export default function HistoryContent({
               currentUserId={currentUserId}
               emptyMessage={current.empty}
               label={current.label}
+              period={summaryPeriod}
               t={t}
             />
           </div>
