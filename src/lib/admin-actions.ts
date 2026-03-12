@@ -59,21 +59,12 @@ export async function revokeUser(userId: string) {
 }
 
 /** Set any user's role (with safeguards) */
-export async function setUserRole(userId: string, role: Role) {
+export async function setUserRole(userId: string, role: Role): Promise<{ error?: string }> {
   const admin = await requireAdmin();
 
   // Prevent admin from demoting themselves
   if (userId === admin.id && role !== Role.ADMIN) {
-    throw new Error("Cannot change your own role");
-  }
-
-  // If promoting to ADMIN, the user should own at least one car
-  // (ADMIN = Car Owner by definition). Skip this check for demotions.
-  if (role === Role.ADMIN) {
-    const carCount = await prisma.car.count({ where: { ownerId: userId } });
-    if (carCount === 0) {
-      throw new Error("Only car owners can be promoted to ADMIN. Assign a car first.");
-    }
+    return { error: "Cannot change your own role" };
   }
 
   await prisma.user.update({
@@ -81,6 +72,8 @@ export async function setUserRole(userId: string, role: Role) {
     data: { role },
   });
   revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  return {};
 }
 
 // ---------------------------------------------------------------------------

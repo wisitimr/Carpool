@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { approveUser, revokeUser, deleteUser, setUserRole } from "@/lib/admin-actions";
+import { approveUser, revokeUser, setUserRole } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 import type { Role } from "@prisma/client";
 
@@ -48,20 +48,13 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
     }
   }
 
-  async function handleDelete(userId: string) {
-    if (!confirm(t.confirmDeleteUser)) return;
-    setLoadingAction(`delete-${userId}`);
-    try {
-      await deleteUser(userId);
-    } finally {
-      setLoadingAction(null);
-    }
-  }
-
   async function handleRoleChange(userId: string, newRole: Role) {
     setLoadingAction(`role-${userId}`);
     try {
-      await setUserRole(userId, newRole);
+      const result = await setUserRole(userId, newRole);
+      if (result.error) {
+        alert(result.error);
+      }
     } finally {
       setLoadingAction(null);
     }
@@ -90,22 +83,13 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                     <p className="truncate font-medium">{user.name ?? t.noName}</p>
                     <p className="truncate text-sm text-gray-500">{user.email}</p>
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      onClick={() => handleApprove(user.id)}
-                      disabled={isAnyLoading}
-                      className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50"
-                    >
-                      {t.approve}{loadingAction === `approve-${user.id}` && "..."}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      disabled={isAnyLoading}
-                      className="shrink-0 rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
-                    >
-                      {t.deleteUser}{loadingAction === `delete-${user.id}` && "..."}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleApprove(user.id)}
+                    disabled={isAnyLoading}
+                    className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {t.approve}{loadingAction === `approve-${user.id}` && "..."}
+                  </button>
                 </div>
               </li>
             ))}
@@ -141,54 +125,44 @@ export default function UserManagement({ users, currentUserId }: UserManagementP
                     </span>
                   </div>
                   {!isMe && (
-                    <div className="flex shrink-0 items-center gap-2">
-                      {user.role === "USER" && (
-                        <button
-                          onClick={() => handleRevoke(user.id)}
-                          disabled={isAnyLoading}
-                          className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
-                        >
-                          {t.revoke}{loadingAction === `revoke-${user.id}` && "..."}
-                        </button>
-                      )}
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
-                        disabled={isAnyLoading}
-                        className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
+                    <button
+                      type="button"
+                      onClick={() => toggleUser(user.id)}
+                      className="shrink-0 text-gray-400"
+                    >
+                      <svg
+                        className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
                       >
-                        <option value="USER">USER</option>
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="PENDING">PENDING</option>
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => toggleUser(user.id)}
-                        className="text-gray-400"
-                      >
-                        <svg
-                          className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                      </button>
-                    </div>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </button>
                   )}
                 </div>
 
                 {isExpanded && !isMe && (
-                  <div className="mt-2 border-t border-gray-100 pt-2">
-                    <button
-                      onClick={() => handleDelete(user.id)}
+                  <div className="mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
+                    <select
+                      value={user.role}
+                      onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
                       disabled={isAnyLoading}
-                      className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                      className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm disabled:opacity-50"
                     >
-                      {t.deleteUser}{loadingAction === `delete-${user.id}` && "..."}
-                    </button>
+                      <option value="USER">USER</option>
+                      <option value="ADMIN">ADMIN</option>
+                    </select>
+                    {user.role === "USER" && (
+                      <button
+                        onClick={() => handleRevoke(user.id)}
+                        disabled={isAnyLoading}
+                        className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {t.revoke}{loadingAction === `revoke-${user.id}` && "..."}
+                      </button>
+                    )}
                   </div>
                 )}
               </li>
