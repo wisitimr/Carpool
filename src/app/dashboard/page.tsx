@@ -202,7 +202,7 @@ export default async function DashboardPage() {
                                 )}
                                 {b.parkingShare > 0 && (
                                   <p>
-                                    {t.parking}: ฿{parkingTotal.toFixed(2)} ÷ {b.passengerCount} {t.riders} = ฿{b.parkingShare.toFixed(2)}
+                                    {t.parking}: ฿{parkingTotal.toFixed(2)} ÷ {b.passengerCount} {t.people} = ฿{b.parkingShare.toFixed(2)}
                                   </p>
                                 )}
                               </div>

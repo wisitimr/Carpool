@@ -144,7 +144,7 @@ export default function DebtSettlement({ debts, carId }: DebtSettlementProps) {
                       <li key={i} className="py-2">
                         <div className="flex items-center justify-between gap-3">
                           <span className="min-w-0 truncate text-xs text-gray-600">
-                            {b.carName} &mdash; {b.date} ({b.passengerCount} {t.riders})
+                            {b.carName} &mdash; {b.date} ({b.passengerCount} {t.people})
                           </span>
                           <span className="shrink-0 text-xs font-medium text-gray-900">
                             ฿{b.share.toFixed(2)}

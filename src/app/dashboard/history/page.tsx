@@ -57,11 +57,14 @@ export default async function HistoryPage() {
     pendingDebt: d.pendingDebt,
     breakdown: d.breakdown.map((b) => ({
       date: b.date.toISOString().split("T")[0],
+      carId: b.carId,
+      carName: b.carName,
       share: b.share,
       gasShare: b.gasShare,
       parkingShare: b.parkingShare,
       outboundCount: b.outboundCount,
       returnCount: b.returnCount,
+      passengerCount: b.passengerCount,
     })),
   }));
 
@@ -124,6 +127,9 @@ export default async function HistoryPage() {
           paid: t.paid,
           pending: t.pending,
           you: t.you,
+          trip: t.trip,
+          people: t.people,
+          splitAmong: t.splitAmong,
         }}
       />
     </main>

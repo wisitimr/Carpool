@@ -27,11 +27,14 @@ interface PaymentRecord {
 
 interface BreakdownEntry {
   date: string; // ISO date
+  carId: string;
+  carName: string;
   share: number;
   gasShare: number;
   parkingShare: number;
   outboundCount: number;
   returnCount: number;
+  passengerCount: number;
 }
 
 interface DebtWithBreakdown {
@@ -80,6 +83,9 @@ interface HistoryContentProps {
     paid: string;
     pending: string;
     you: string;
+    trip: string;
+    people: string;
+    splitAmong: string;
   };
 }
 
@@ -218,19 +224,181 @@ function useInfiniteScroll<T>(items: T[]) {
   };
 }
 
-function SummaryCard({
-  entry,
-  label,
-  isExpanded,
-  onToggle,
+/** Render per-car calculation detail for a single day's breakdown entries */
+function DayBreakdownDetail({
+  entries,
   t,
 }: {
-  entry: GroupedPeriod["entries"][0];
-  label: string;
-  isExpanded: boolean;
-  onToggle: () => void;
+  entries: BreakdownEntry[];
   t: HistoryContentProps["t"];
 }) {
+  return (
+    <ul className="divide-y divide-gray-100 text-sm">
+      {entries.map((b, i) => {
+        const tripCount = b.outboundCount + b.returnCount;
+        const gasCostPerTrip = tripCount > 0 ? b.gasShare / tripCount : 0;
+        const parkingTotal = b.parkingShare * b.passengerCount;
+        return (
+          <li key={`${b.carId}-${i}`} className="py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 truncate text-gray-600">{b.carName}</span>
+              <span className="shrink-0 font-medium text-gray-900">฿{b.share.toFixed(2)}</span>
+            </div>
+            <div className="mt-1 space-y-0.5 text-xs text-gray-400">
+              {tripCount > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-500">{t.trips}:</span>
+                  {b.outboundCount > 0 && (
+                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-600">{b.outboundCount} {t.outbound}</span>
+                  )}
+                  {b.returnCount > 0 && (
+                    <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-indigo-600">{b.returnCount} {t.return}</span>
+                  )}
+                </div>
+              )}
+              {b.gasShare > 0 && (
+                <p>{t.gas}: ฿{gasCostPerTrip.toFixed(2)} × {tripCount} {t.trip} = ฿{b.gasShare.toFixed(2)}</p>
+              )}
+              {b.parkingShare > 0 && (
+                <p>{t.parking}: ฿{parkingTotal.toFixed(2)} ÷ {b.passengerCount} {t.people} = ฿{b.parkingShare.toFixed(2)}</p>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** Collapsible sub-period card used inside month/year views */
+function SubPeriodCard({
+  label,
+  total,
+  isExpanded,
+  onToggle,
+  children,
+}: {
+  label: string;
+  total: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg bg-white ring-1 ring-gray-100">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-3 py-2 text-left"
+      >
+        <p className="text-xs font-medium text-gray-500">{label}</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <p className="text-sm font-semibold text-gray-700">฿{total.toFixed(2)}</p>
+          <svg
+            className={`h-3.5 w-3.5 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </div>
+      </button>
+      {isExpanded && (
+        <div className="border-t border-gray-100 px-3 pb-2 pt-1">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SummaryCard({
+  group,
+  period,
+  isExpanded,
+  onToggle,
+  dayBreakdownMap,
+  expandedSubPeriods,
+  toggleSubPeriod,
+  locale,
+  t,
+}: {
+  group: GroupedPeriod;
+  period: SummaryPeriod;
+  isExpanded: boolean;
+  onToggle: () => void;
+  dayBreakdownMap: Map<string, BreakdownEntry[]>;
+  expandedSubPeriods: Set<string>;
+  toggleSubPeriod: (key: string) => void;
+  locale: string;
+  t: HistoryContentProps["t"];
+}) {
+  const entry = group.entries[0];
+  const loc = locale === "th" ? "th-TH-u-ca-buddhist" : "en-US";
+
+  // Build sub-period data when expanded
+  const subData = useMemo(() => {
+    if (!isExpanded) return null;
+
+    if (period === "day") {
+      // Day view: show raw breakdown entries for this date
+      return dayBreakdownMap.get(group.key) ?? [];
+    }
+
+    if (period === "month") {
+      // Month view: group day entries within this month
+      const days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[] = [];
+      for (const [dateISO, entries] of dayBreakdownMap) {
+        if (dateISO.slice(0, 7) === group.key) {
+          const d = new Date(dateISO + "T00:00:00");
+          days.push({
+            dateISO,
+            label: d.toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "short" }),
+            entries,
+            total: entries.reduce((s, e) => s + e.share, 0),
+          });
+        }
+      }
+      days.sort((a, b) => b.dateISO.localeCompare(a.dateISO));
+      return days;
+    }
+
+    if (period === "year") {
+      // Year view: group into months, each with their day entries
+      const monthMap = new Map<string, { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]>();
+      for (const [dateISO, entries] of dayBreakdownMap) {
+        if (dateISO.slice(0, 4) === group.key) {
+          const monthKey = dateISO.slice(0, 7);
+          if (!monthMap.has(monthKey)) monthMap.set(monthKey, []);
+          const d = new Date(dateISO + "T00:00:00");
+          monthMap.get(monthKey)!.push({
+            dateISO,
+            label: d.toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "short" }),
+            entries,
+            total: entries.reduce((s, e) => s + e.share, 0),
+          });
+        }
+      }
+      const months: { monthKey: string; label: string; days: typeof monthMap extends Map<string, infer V> ? V : never; total: number }[] = [];
+      for (const [monthKey, days] of monthMap) {
+        days.sort((a, b) => b.dateISO.localeCompare(a.dateISO));
+        const d = new Date(parseInt(monthKey.slice(0, 4)), parseInt(monthKey.slice(5, 7)) - 1, 1);
+        months.push({
+          monthKey,
+          label: d.toLocaleDateString(loc, { month: "long", year: "numeric" }),
+          days,
+          total: days.reduce((s, day) => s + day.total, 0),
+        });
+      }
+      months.sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+      return months;
+    }
+
+    return null;
+  }, [isExpanded, period, group.key, dayBreakdownMap, loc]);
+
   return (
     <div className="rounded-xl bg-gray-50">
       <button
@@ -239,7 +407,7 @@ function SummaryCard({
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500">{label}</p>
+          <p className="text-xs font-medium text-gray-500">{group.label}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <p className="font-bold text-gray-800">
@@ -257,16 +425,72 @@ function SummaryCard({
         </div>
       </button>
       {isExpanded && (
-        <div className="border-t border-gray-100 px-4 pb-3 pt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-          {(entry.outboundCount > 0 || entry.returnCount > 0) && (
-            <span>
-              {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
-              {entry.outboundCount > 0 && entry.returnCount > 0 && " · "}
-              {entry.returnCount > 0 && <span className="text-indigo-700">{t.return} ({entry.returnCount})</span>}
-            </span>
+        <div className="border-t border-gray-100 px-4 pb-3 pt-2">
+          {/* Aggregate totals */}
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+            {(entry.outboundCount > 0 || entry.returnCount > 0) && (
+              <span>
+                {entry.outboundCount > 0 && <span className="text-amber-700">{t.outbound} ({entry.outboundCount})</span>}
+                {entry.outboundCount > 0 && entry.returnCount > 0 && " · "}
+                {entry.returnCount > 0 && <span className="text-indigo-700">{t.return} ({entry.returnCount})</span>}
+              </span>
+            )}
+            {entry.gasTotal > 0 && <span>{t.gas}: ฿{entry.gasTotal.toFixed(2)}</span>}
+            {entry.parkingTotal > 0 && <span>{t.parking}: ฿{entry.parkingTotal.toFixed(2)}</span>}
+          </div>
+
+          {/* Day view: per-car detail */}
+          {period === "day" && Array.isArray(subData) && (subData as BreakdownEntry[]).length > 0 && (
+            <div className="mt-2">
+              <DayBreakdownDetail entries={subData as BreakdownEntry[]} t={t} />
+            </div>
           )}
-          {entry.gasTotal > 0 && <span>{t.gas}: ฿{entry.gasTotal.toFixed(2)}</span>}
-          {entry.parkingTotal > 0 && <span>{t.parking}: ฿{entry.parkingTotal.toFixed(2)}</span>}
+
+          {/* Month view: day sub-cards */}
+          {period === "month" && Array.isArray(subData) && (subData as { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]).length > 0 && (
+            <div className="mt-3 space-y-2">
+              {(subData as { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]).map((day) => (
+                <SubPeriodCard
+                  key={day.dateISO}
+                  label={day.label}
+                  total={day.total}
+                  isExpanded={expandedSubPeriods.has(`${group.key}_${day.dateISO}`)}
+                  onToggle={() => toggleSubPeriod(`${group.key}_${day.dateISO}`)}
+                >
+                  <DayBreakdownDetail entries={day.entries} t={t} />
+                </SubPeriodCard>
+              ))}
+            </div>
+          )}
+
+          {/* Year view: month sub-cards, each with day sub-cards */}
+          {period === "year" && Array.isArray(subData) && (subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).length > 0 && (
+            <div className="mt-3 space-y-2">
+              {(subData as { monthKey: string; label: string; days: { dateISO: string; label: string; entries: BreakdownEntry[]; total: number }[]; total: number }[]).map((month) => (
+                <SubPeriodCard
+                  key={month.monthKey}
+                  label={month.label}
+                  total={month.total}
+                  isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}`)}
+                  onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}`)}
+                >
+                  <div className="space-y-2">
+                    {month.days.map((day) => (
+                      <SubPeriodCard
+                        key={day.dateISO}
+                        label={day.label}
+                        total={day.total}
+                        isExpanded={expandedSubPeriods.has(`${group.key}_${month.monthKey}_${day.dateISO}`)}
+                        onToggle={() => toggleSubPeriod(`${group.key}_${month.monthKey}_${day.dateISO}`)}
+                      >
+                        <DayBreakdownDetail entries={day.entries} t={t} />
+                      </SubPeriodCard>
+                    ))}
+                  </div>
+                </SubPeriodCard>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -530,6 +754,31 @@ export default function HistoryContent({
       return next;
     });
   };
+
+  // Expanded sub-period cards (for month/year drill-down)
+  const [expandedSubPeriods, setExpandedSubPeriods] = useState<Set<string>>(new Set());
+  const toggleSubPeriod = useCallback((key: string) => {
+    setExpandedSubPeriods((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  // Map<dateISO, BreakdownEntry[]> — raw per-car entries for each day, filtered to current user
+  const dayBreakdownMap = useMemo(() => {
+    const map = new Map<string, BreakdownEntry[]>();
+    for (const debt of allDebts) {
+      if (debt.userId !== currentUserId) continue;
+      for (const b of debt.breakdown) {
+        const list = map.get(b.date) ?? [];
+        list.push(b);
+        map.set(b.date, list);
+      }
+    }
+    return map;
+  }, [allDebts, currentUserId]);
   const togglePayment = (id: string) => {
     setExpandedPayments((prev) => {
       const next = new Set(prev);
@@ -915,10 +1164,14 @@ export default function HistoryContent({
                 {summaryScroll.visible.map((group) => (
                   <SummaryCard
                     key={group.key}
-                    entry={group.entries[0]}
-                    label={group.label}
+                    group={group}
+                    period={summaryPeriod}
                     isExpanded={isSummaryExpanded(group.key)}
                     onToggle={() => toggleSummary(group.key)}
+                    dayBreakdownMap={dayBreakdownMap}
+                    expandedSubPeriods={expandedSubPeriods}
+                    toggleSubPeriod={toggleSubPeriod}
+                    locale={locale}
                     t={t}
                   />
                 ))}
