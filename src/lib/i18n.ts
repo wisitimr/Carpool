@@ -73,6 +73,7 @@ const translations = {
     perTrip: "per trip",
     splitAmong: "split among",
     payments: "Payments",
+    paidDate: "Paid Date",
     viewAll: "View All",
     allUsersActivity: "All Users Activity",
 
@@ -216,6 +217,7 @@ const translations = {
     perTrip: "ต่อเที่ยว",
     splitAmong: "หารกัน",
     payments: "การชำระเงิน",
+    paidDate: "วันที่จ่าย",
     viewAll: "ดูทั้งหมด",
     allUsersActivity: "กิจกรรมผู้ใช้ทั้งหมด",
 

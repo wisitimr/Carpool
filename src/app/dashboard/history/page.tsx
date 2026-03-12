@@ -77,6 +77,7 @@ export default async function HistoryPage() {
     carName: p.car.name,
     date: formatDateShort(p.date, locale),
     dateISO: p.date.toISOString().split("T")[0],
+    paidAt: formatDateShort(p.createdAt, locale),
     amount: p.amount,
     note: p.note,
   }));
@@ -134,6 +135,7 @@ export default async function HistoryPage() {
           people: t.people,
           splitAmong: t.splitAmong,
           passenger: t.passenger,
+          paidDate: t.paidDate,
         }}
       />
     </main>
