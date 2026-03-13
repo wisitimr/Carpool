@@ -9,7 +9,7 @@ import CostForm from "./cost-form";
 import ProfileMenu from "./profile-menu";
 import DebtSettlement from "./debt-settlement";
 import PendingBreakdown from "./pending-breakdown";
-import { todayBangkok, startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
+import { startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -25,8 +25,6 @@ export default async function DashboardPage() {
 
   const startOfMonth = startOfMonthBangkok();
   const endOfMonth = endOfMonthBangkok();
-
-  const today = todayBangkok();
 
   const [allCars, ownedCar, recentTrips, debts] =
     await Promise.all([
@@ -49,18 +47,6 @@ export default async function DashboardPage() {
     ]);
 
   const carIds = allCars.map((c) => c.id);
-
-  // Fetch today's trip costs for owned cars
-  const todayTripCosts = allCars.length > 0
-    ? await prisma.tripCost.findMany({
-        where: {
-          carId: { in: carIds },
-          date: today,
-        },
-        include: { trips: { select: { id: true, userId: true } } },
-        orderBy: { createdAt: "asc" },
-      })
-    : [];
 
   const myDebt = debts.find((d) => d.userId === userId);
 
@@ -211,14 +197,6 @@ export default async function DashboardPage() {
             <div className="px-5 py-4 sm:px-6 sm:py-5">
               <CostForm
                 cars={allCars.map((c) => ({ id: c.id, name: c.name, defaultGasCost: c.defaultGasCost }))}
-                todayTrips={todayTripCosts.map((tc) => ({
-                  id: tc.id,
-                  carId: tc.carId,
-                  gasCost: tc.gasCost,
-                  parkingCost: tc.parkingCost,
-                  label: tc.label,
-                  passengerCount: tc.trips.length,
-                }))}
               />
             </div>
           </section>
