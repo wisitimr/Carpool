@@ -780,7 +780,7 @@ export default function HistoryContent({
   t,
 }: HistoryContentProps) {
   const [activeTab, setActiveTab] = useState<Tab>("trips");
-  const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>("month");
+  const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>("day");
 
   // Trip filter state
   const [showTripFilter, setShowTripFilter] = useState(false);
