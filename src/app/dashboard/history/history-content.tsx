@@ -467,21 +467,16 @@ function SummaryCard({
       </button>
       {isExpanded && (
         <div className="border-t border-gray-100 px-4 pb-3">
-          {/* Admin: per-user breakdown */}
+          {/* Admin: per-user list */}
           {isAdmin && group.entries.length > 0 && (
-            <div className="mt-2 space-y-1">
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
               {group.entries.map((e) => (
-                <div key={e.userId} className="flex justify-between text-xs text-gray-500">
-                  <span>
-                    {e.userName ?? e.userId}
-                    {e.userId === currentUserId && (
-                      <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">{t.you}</span>
-                    )}
-                  </span>
-                  <span className={e.pendingDebt <= 0 ? "text-green-600" : "text-gray-700"}>
-                    ฿{e.totalDebt.toFixed(2)}
-                  </span>
-                </div>
+                <span key={e.userId}>
+                  {e.userName ?? e.userId}
+                  {e.userId === currentUserId && (
+                    <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">{t.you}</span>
+                  )}
+                </span>
               ))}
             </div>
           )}
@@ -956,22 +951,24 @@ export default function HistoryContent({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Badge filter row */}
-      <div className="flex items-center gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              activeTab === tab.key
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                activeTab === tab.key
+                  ? "bg-gray-900 text-white shadow-sm"
+                  : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         {isAdmin && (
-          <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-sm text-gray-500">
+          <label className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-500">
             <input
               type="checkbox"
               checked={onlyMe}
