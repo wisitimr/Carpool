@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useT } from "@/lib/i18n-context";
 
 interface BreakdownEntry {
@@ -23,9 +23,19 @@ export default function PendingBreakdown({ entries }: PendingBreakdownProps) {
   const { t } = useT();
   const [visibleCount, setVisibleCount] = useState(5);
 
+  // Assign trip numbers per date
+  const entriesWithTripNum = useMemo(() => {
+    const countByDate = new Map<string, number>();
+    return entries.map((b) => {
+      const num = (countByDate.get(b.date) ?? 0) + 1;
+      countByDate.set(b.date, num);
+      return { ...b, tripNum: num };
+    });
+  }, [entries]);
+
   if (entries.length === 0) return null;
 
-  const visible = entries.slice(0, visibleCount);
+  const visible = entriesWithTripNum.slice(0, visibleCount);
   const hasMore = visibleCount < entries.length;
 
   return (
@@ -37,9 +47,14 @@ export default function PendingBreakdown({ entries }: PendingBreakdownProps) {
         {visible.map((b, i) => (
           <details key={i} className="group rounded-xl bg-gray-50">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 [&::-webkit-details-marker]:hidden">
-              <div className="min-w-0">
-                <p className="font-medium text-gray-800">{b.carName}</p>
-                <p className="text-xs text-gray-500">{b.date}</p>
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-200 text-xs font-bold text-gray-600">
+                  #{b.tripNum}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-800">{b.carName}</p>
+                  <p className="text-xs text-gray-500">{b.date}</p>
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="font-semibold text-gray-900">฿{b.share.toFixed(2)}</span>
