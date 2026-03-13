@@ -291,8 +291,6 @@ function SummaryCard({
   expandedSubPeriods,
   toggleSubPeriod,
   settledDays,
-  isAdmin,
-  currentUserId,
   locale,
   t,
 }: {
@@ -304,15 +302,13 @@ function SummaryCard({
   expandedSubPeriods: Set<string>;
   toggleSubPeriod: (key: string) => void;
   settledDays: Set<string>;
-  isAdmin: boolean;
-  currentUserId: string;
   locale: string;
   t: HistoryContentProps["t"];
 }) {
   const entry = group.entries[0];
-  const totalDebt = isAdmin ? group.entries.reduce((s, e) => s + e.totalDebt, 0) : entry?.totalDebt ?? 0;
-  const totalPaid = isAdmin ? group.entries.reduce((s, e) => s + e.totalPaid, 0) : entry?.totalPaid ?? 0;
-  const pendingDebt = isAdmin ? group.entries.reduce((s, e) => s + e.pendingDebt, 0) : entry?.pendingDebt ?? 0;
+  const totalDebt = entry?.totalDebt ?? 0;
+  const totalPaid = entry?.totalPaid ?? 0;
+  const pendingDebt = entry?.pendingDebt ?? 0;
 
   // Compute grand total (total trip costs before splitting) for this period
   const grandTotal = useMemo(() => {
@@ -710,11 +706,11 @@ export default function HistoryContent({
     });
   }, []);
 
-  // Map<dateISO, BreakdownEntry[]> — raw per-car entries for each day, filtered to current user (admins see all unless onlyMe)
+  // Map<dateISO, BreakdownEntry[]> — raw per-car entries for current user
   const dayBreakdownMap = useMemo(() => {
     const map = new Map<string, BreakdownEntry[]>();
     for (const debt of allDebts) {
-      if ((!isAdmin || onlyMe) && debt.userId !== currentUserId) continue;
+      if (debt.userId !== currentUserId) continue;
       for (const b of debt.breakdown) {
         const list = map.get(b.date) ?? [];
         list.push(b);
@@ -722,22 +718,18 @@ export default function HistoryContent({
       }
     }
     return map;
-  }, [allDebts, currentUserId, isAdmin, onlyMe]);
+  }, [allDebts, currentUserId]);
 
   // Set of settled day keys — days where pendingDebt <= 0
   const settledDays = useMemo(() => {
     const dayGroups = groupByPeriod(allDebts, allPayments, "day", locale);
     const settled = new Set<string>();
     for (const g of dayGroups) {
-      if (isAdmin && !onlyMe) {
-        if (g.entries.every((e) => e.pendingDebt <= 0)) settled.add(g.key);
-      } else {
-        const e = g.entries.find((e) => e.userId === currentUserId);
-        if (e && e.pendingDebt <= 0) settled.add(g.key);
-      }
+      const e = g.entries.find((e) => e.userId === currentUserId);
+      if (e && e.pendingDebt <= 0) settled.add(g.key);
     }
     return settled;
-  }, [allDebts, allPayments, locale, currentUserId, isAdmin, onlyMe]);
+  }, [allDebts, allPayments, locale, currentUserId]);
   const togglePayment = (id: string) => {
     setExpandedPayments((prev) => {
       const next = new Set(prev);
@@ -835,14 +827,13 @@ export default function HistoryContent({
   // Group summary data by period, filtered to current user only (admins see all unless onlyMe)
   const summaryGroups = useMemo(() => {
     const groups = groupByPeriod(allDebts, allPayments, summaryPeriod, locale);
-    if (isAdmin && !onlyMe) return groups.filter((g) => g.entries.length > 0);
     return groups
       .map((g) => ({
         ...g,
         entries: g.entries.filter((e) => e.userId === currentUserId),
       }))
       .filter((g) => g.entries.length > 0);
-  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId, isAdmin, onlyMe]);
+  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId]);
 
   const summaryScroll = useInfiniteScroll(summaryGroups);
 
@@ -1043,8 +1034,6 @@ export default function HistoryContent({
                   expandedSubPeriods={expandedSubPeriods}
                   toggleSubPeriod={toggleSubPeriod}
                   settledDays={settledDays}
-                  isAdmin={isAdmin}
-                  currentUserId={currentUserId}
                   locale={locale}
                   t={t}
                 />
