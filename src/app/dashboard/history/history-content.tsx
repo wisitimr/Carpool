@@ -1213,9 +1213,10 @@ export default function HistoryContent({
                               {p.carName}
                             </p>
                             <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
-                              <span>
-                                {fmtDate(p.dateISO, locale)} &middot; {t.paidDate}: {p.paidAt}
-                              </span>
+                              <div>
+                                <p>{fmtDate(p.dateISO, locale)} &middot; {t.paid}</p>
+                                <p>{t.date}: {p.paidAt}</p>
+                              </div>
                               {isAdmin && p.userName && (
                                 <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-600">
                                   {p.userName}
