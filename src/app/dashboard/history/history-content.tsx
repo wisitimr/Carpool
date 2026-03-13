@@ -951,22 +951,20 @@ export default function HistoryContent({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Badge filter row */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                activeTab === tab.key
-                  ? "bg-gray-900 text-white shadow-sm"
-                  : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex items-center gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              activeTab === tab.key
+                ? "bg-gray-900 text-white shadow-sm"
+                : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
         {isAdmin && (
           <label className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-500">
             <input
