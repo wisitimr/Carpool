@@ -160,13 +160,13 @@ export default async function DashboardPage() {
                     return (
                       <div
                         key={trip.id}
-                        className="flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3"
+                        className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 transition hover:border-gray-200 hover:shadow-sm"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-800">
+                          <p className="text-sm font-medium text-gray-800">
                             {t.tripNumber} #{num} <span className="font-normal text-gray-400">&middot;</span> <span className="font-normal text-gray-500">{trip.car.name}</span>
                           </p>
-                          <p className="mt-0.5 text-xs text-gray-500">
+                          <p className="mt-0.5 text-xs text-gray-400">
                             {isAdmin && trip.user?.name && (
                               <span className="font-medium text-gray-600">{trip.user.name} &middot; </span>
                             )}
