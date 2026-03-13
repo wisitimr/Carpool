@@ -20,7 +20,7 @@
 |------|------------|
 | **PENDING** | Newly registered user awaiting admin approval — can only see the waiting screen |
 | **USER (Passenger)** | Tap NFC/QR to check in, view pending debts, view trip/payment history |
-| **ADMIN (Driver/Car Owner)** | Everything USER can do + record gas/parking costs, manage debts, manage users, manage cars, disable dates, generate QR codes |
+| **ADMIN (Driver/Car Owner)** | Everything USER can do + record gas/parking costs, manage debts, manage users, manage cars, generate QR codes |
 
 ---
 
@@ -50,9 +50,6 @@ Payment {                       // Debt settlement record
   id, userId, carId, amount, note, date
 }
 
-DisabledDate {                  // System holidays / off days
-  id, date, reason
-}
 ```
 
 ---
@@ -184,11 +181,10 @@ Somchai pays ฿100 → March 10 debt (฿75) cleared, ฿25 remaining → appli
 - Shows the car being tapped
 - Confirm / Cancel buttons
 
-**Tap Success Screen — 5 states to design:**
+**Tap Success Screen — 4 states to design:**
 - **Check-in successful** — "Recorded successfully! Trip #X"
 - **Already recorded** — "You already checked in today" (anti-fraud 2-hour debounce)
 - **No open trip** — "No trip available for today"
-- **System disabled** — "Service not available today"
 - **Owner self-tap** — "Car owner does not need to tap"
 
 ---
@@ -206,11 +202,7 @@ Somchai pays ฿100 → March 10 debt (฿75) cleared, ฿25 remaining → appli
 - Add new car / Delete car
 - Set default gas cost
 
-**5.4.3 Date Management:**
-- Calendar showing disabled dates
-- Add/remove disabled dates + reason (e.g., "Public holiday")
-
-**5.4.4 QR Code:**
+**5.4.3 QR Code:**
 - Display QR code for each car
 - Show linked URL for tap page
 - Download/share QR
@@ -406,7 +398,6 @@ Drill-down:           Year → Month → Day → per-car details
 ```
 - 2-hour debounce:      Show "You already tapped. Please wait 2 hours."
 - Owner self-tap:       Show "Car owner does not need to tap."
-- Disabled date:        Show message + reason: "Service closed today: Public Holiday"
 - No TripCost yet:      Show "No costs recorded for today yet."
 - Zero debt:            Show positive message: "No pending debts!"
 - New PENDING user:     Waiting screen with step-by-step explanation
@@ -421,10 +412,9 @@ Drill-down:           Year → Month → Day → per-car details
 - [ ] **History — Trips Tab** (date filter + infinite scroll + grouped by date)
 - [ ] **History — Payments Tab** (date filter + infinite scroll)
 - [ ] **History — Summary Tab** (drill-down year/month/day + calculation formulas)
-- [ ] **Tap Confirm & Success** (5 status states)
+- [ ] **Tap Confirm & Success** (4 status states)
 - [ ] **Admin — User Management** (approve/change role/remove)
 - [ ] **Admin — Car Management** (add/delete/configure)
-- [ ] **Admin — Date Management** (calendar + enable/disable dates)
 - [ ] **Admin — QR Code** (display/download)
 - [ ] **Pending Approval** (waiting screen)
 - [ ] **Sign In / Sign Up**
