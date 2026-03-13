@@ -1195,36 +1195,37 @@ export default function HistoryContent({
               <p className="text-sm text-gray-400">{t.noPayments}</p>
             ) : (
               <>
-                {/* Mobile */}
-                <div className="space-y-2 sm:hidden">
+                <div className="space-y-2">
                   {paymentScroll.visible.map((p) => {
                     const isExpanded = expandedPayments.has(p.id);
                     return (
                       <div
                         key={p.id}
-                        className="rounded-xl bg-gray-50"
+                        className="overflow-hidden rounded-xl border border-gray-100 bg-white transition hover:border-gray-200 hover:shadow-sm"
                       >
                         <button
                           type="button"
                           onClick={() => togglePayment(p.id)}
-                          className="flex w-full items-center justify-between px-4 py-3 text-left"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left"
                         >
-                          <div className="min-w-0">
-                            <p className="font-medium text-gray-800">{p.carName}</p>
-                            <p className="text-xs text-gray-500">
-                              {fmtDate(p.dateISO, locale)}
-                              {isAdmin && p.userName && (
-                                <>
-                                  {" · "}{p.userName}
-                                  {p.userId === currentUserId && (
-                                    <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">{t.you}</span>
-                                  )}
-                                </>
-                              )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-800">
+                              {p.carName}
                             </p>
+                            <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
+                              <span>
+                                {fmtDate(p.dateISO, locale)} &middot; {t.paidDate}: {p.paidAt}
+                              </span>
+                              {isAdmin && p.userName && (
+                                <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-600">
+                                  {p.userName}
+                                  {p.userId === currentUserId && ` (${t.you})`}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
-                            <span className="font-semibold text-green-600">
+                            <span className="text-sm font-semibold text-green-600">
                               ฿{p.amount.toFixed(2)}
                             </span>
                             <svg
@@ -1239,22 +1240,22 @@ export default function HistoryContent({
                           </div>
                         </button>
                         {isExpanded && (
-                          <div className="border-t border-gray-100 px-4 pb-3 pt-2 text-xs text-gray-500">
+                          <div className="space-y-1 border-t border-gray-100 px-4 pb-3 pt-2 text-xs text-gray-500">
                             <div className="flex justify-between">
-                              <span>{t.car}</span>
+                              <span>{t.car}:</span>
                               <span className="text-gray-700">{p.carName}</span>
                             </div>
-                            <div className="mt-1 flex justify-between">
-                              <span>{t.amount}</span>
+                            <div className="flex justify-between">
+                              <span>{t.amount}:</span>
                               <span className="font-medium text-green-600">฿{p.amount.toFixed(2)}</span>
                             </div>
-                            <div className="mt-1 flex justify-between">
-                              <span>{t.paidDate}</span>
+                            <div className="flex justify-between">
+                              <span>{t.paidDate}:</span>
                               <span className="text-gray-700">{p.paidAt}</span>
                             </div>
                             {p.note && (
-                              <div className="mt-1 flex justify-between">
-                                <span>{t.note}</span>
+                              <div className="flex justify-between">
+                                <span>{t.note}:</span>
                                 <span className="text-gray-700">{p.note}</span>
                               </div>
                             )}
@@ -1263,72 +1264,6 @@ export default function HistoryContent({
                       </div>
                     );
                   })}
-                </div>
-
-                {/* Desktop */}
-                <div className="hidden sm:block">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
-                        <th className="w-6 pb-3"></th>
-                        <th className="pb-3 font-semibold">{t.date}</th>
-                        {isAdmin && <th className="pb-3 font-semibold">{t.passenger}</th>}
-                        <th className="pb-3 font-semibold">{t.car}</th>
-                        <th className="pb-3 font-semibold">{t.paidDate}</th>
-                        <th className="pb-3 text-right font-semibold">{t.amount}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {paymentScroll.visible.map((p) => {
-                        const isExpanded = expandedPayments.has(p.id);
-                        return (
-                          <Fragment key={p.id}>
-                            <tr
-                              className="cursor-pointer hover:bg-gray-50/50"
-                              onClick={() => togglePayment(p.id)}
-                            >
-                              <td className="py-3 text-gray-400">
-                                <svg
-                                  className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                </svg>
-                              </td>
-                              <td className="py-3 text-gray-700">{fmtDate(p.dateISO, locale)}</td>
-                              {isAdmin && (
-                                <td className="py-3 text-gray-600">
-                                  {p.userName ?? "—"}
-                                  {p.userId === currentUserId && (
-                                    <span className="ml-1 rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">{t.you}</span>
-                                  )}
-                                </td>
-                              )}
-                              <td className="py-3 font-medium text-gray-800">{p.carName}</td>
-                              <td className="py-3 text-gray-500">{p.paidAt}</td>
-                              <td className="py-3 text-right font-semibold text-green-600">
-                                ฿{p.amount.toFixed(2)}
-                              </td>
-                            </tr>
-                            {isExpanded && p.note && (
-                                <tr>
-                                  <td colSpan={isAdmin ? 6 : 5} className="pb-3 pt-0">
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
-                                      <span>
-                                        <span className="font-medium text-gray-600">{t.note}:</span> {p.note}
-                                      </span>
-                                    </div>
-                                  </td>
-                                </tr>
-                            )}
-                          </Fragment>
-                        );
-                      })}
-                    </tbody>
-                  </table>
                 </div>
 
                 {paymentScroll.hasMore && (
