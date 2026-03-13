@@ -175,14 +175,15 @@ export default async function DashboardPage() {
                           const parkingTotal = b.parkingShare * b.passengerCount;
                           return (
                             <li key={i} className="py-2.5">
-                              <details>
-                                <summary className="flex cursor-pointer items-center justify-between gap-3">
+                              <details className="group">
+                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
                                   <span className="min-w-0 truncate text-gray-600">
                                     {b.carName} &mdash;{" "}
                                     {formatDateShort(b.date, locale)}
                                   </span>
-                                  <span className="shrink-0 font-medium text-gray-900">
-                                    ฿{b.share.toFixed(2)}
+                                  <span className="flex shrink-0 items-center gap-1.5">
+                                    <span className="font-medium text-gray-900">฿{b.share.toFixed(2)}</span>
+                                    <svg className="h-3.5 w-3.5 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                                   </span>
                                 </summary>
                                 <div className="mt-1 space-y-0.5 text-xs text-gray-400">
