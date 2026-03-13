@@ -91,6 +91,7 @@ interface HistoryContentProps {
     splitAmong: string;
     passenger: string;
     paidDate: string;
+    allUsers: string;
   };
 }
 
@@ -775,6 +776,22 @@ export default function HistoryContent({
   const [payDateTo, setPayDateTo] = useState("");
   const [, setPayRangeStep] = useState<"from" | "to">("from");
 
+  // Admin user filter (shared across payments & summary)
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const userOptions = useMemo(() => {
+    if (!isAdmin) return [];
+    const map = new Map<string, string>();
+    for (const p of allPayments) {
+      if (p.userName) map.set(p.userId, p.userName);
+    }
+    for (const d of allDebts) {
+      if (d.userName) map.set(d.userId, d.userName);
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [isAdmin, allPayments, allDebts]);
+
   // Expanded payment details
   const [expandedPayments, setExpandedPayments] = useState<Set<string>>(new Set());
 
@@ -809,10 +826,12 @@ export default function HistoryContent({
     });
   }, []);
 
-  // Map<dateISO, BreakdownEntry[]> — raw per-car entries for each day, filtered to current user (admins see all)
+  // Map<dateISO, BreakdownEntry[]> — raw per-car entries for each day, filtered to current user (admins see all or filtered user)
   const dayBreakdownMap = useMemo(() => {
     const map = new Map<string, BreakdownEntry[]>();
+    const filterUserId = isAdmin ? selectedUserId : currentUserId;
     for (const debt of allDebts) {
+      if (filterUserId && debt.userId !== filterUserId) continue;
       if (!isAdmin && debt.userId !== currentUserId) continue;
       for (const b of debt.breakdown) {
         const list = map.get(b.date) ?? [];
@@ -821,23 +840,23 @@ export default function HistoryContent({
       }
     }
     return map;
-  }, [allDebts, currentUserId, isAdmin]);
+  }, [allDebts, currentUserId, isAdmin, selectedUserId]);
 
   // Set of settled day keys — days where pendingDebt <= 0
   const settledDays = useMemo(() => {
     const dayGroups = groupByPeriod(allDebts, allPayments, "day", locale);
+    const filterUserId = isAdmin ? selectedUserId : currentUserId;
     const settled = new Set<string>();
     for (const g of dayGroups) {
-      if (isAdmin) {
-        // Admin: settled if all users' debts are settled for that day
+      if (isAdmin && !filterUserId) {
         if (g.entries.every((e) => e.pendingDebt <= 0)) settled.add(g.key);
       } else {
-        const e = g.entries.find((e) => e.userId === currentUserId);
+        const e = g.entries.find((e) => e.userId === (filterUserId || currentUserId));
         if (e && e.pendingDebt <= 0) settled.add(g.key);
       }
     }
     return settled;
-  }, [allDebts, allPayments, locale, currentUserId, isAdmin]);
+  }, [allDebts, allPayments, locale, currentUserId, isAdmin, selectedUserId]);
   const togglePayment = (id: string) => {
     setExpandedPayments((prev) => {
       const next = new Set(prev);
@@ -902,7 +921,9 @@ export default function HistoryContent({
   }, [trips, tripDateFrom, tripDateTo]);
 
   const filteredPayments = useMemo(() => {
-    const base = isAdmin ? allPayments : allPayments.filter((p) => p.userId === currentUserId);
+    let base = isAdmin
+      ? (selectedUserId ? allPayments.filter((p) => p.userId === selectedUserId) : allPayments)
+      : allPayments.filter((p) => p.userId === currentUserId);
     if (!payDateFrom && !payDateTo) return base;
     const from = payDateFrom;
     const to = payDateTo || payDateFrom;
@@ -911,22 +932,23 @@ export default function HistoryContent({
       if (to && p.dateISO > to) return false;
       return true;
     });
-  }, [allPayments, payDateFrom, payDateTo, isAdmin, currentUserId]);
+  }, [allPayments, payDateFrom, payDateTo, isAdmin, currentUserId, selectedUserId]);
 
   const tripScroll = useInfiniteScroll(filteredTrips);
   const paymentScroll = useInfiniteScroll(filteredPayments);
 
-  // Group summary data by period, filtered to current user only (admins see all)
+  // Group summary data by period, filtered to current user only (admins see all or filtered user)
   const summaryGroups = useMemo(() => {
     const groups = groupByPeriod(allDebts, allPayments, summaryPeriod, locale);
-    if (isAdmin) return groups.filter((g) => g.entries.length > 0);
+    const filterUserId = isAdmin ? selectedUserId : currentUserId;
+    if (isAdmin && !filterUserId) return groups.filter((g) => g.entries.length > 0);
     return groups
       .map((g) => ({
         ...g,
-        entries: g.entries.filter((e) => e.userId === currentUserId),
+        entries: g.entries.filter((e) => e.userId === filterUserId),
       }))
       .filter((g) => g.entries.length > 0);
-  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId, isAdmin]);
+  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId, isAdmin, selectedUserId]);
 
   const summaryScroll = useInfiniteScroll(summaryGroups);
 
@@ -945,20 +967,34 @@ export default function HistoryContent({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Badge filter row */}
-      <div className="flex gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              activeTab === tab.key
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
-            }`}
+      <div className="flex items-center gap-2">
+        <div className="flex gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                activeTab === tab.key
+                  ? "bg-gray-900 text-white shadow-sm"
+                  : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {isAdmin && (activeTab === "payments" || activeTab === "summary") && userOptions.length > 0 && (
+          <select
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            className="ml-auto rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm focus:border-gray-400 focus:outline-none"
           >
-            {tab.label}
-          </button>
-        ))}
+            <option value="">{t.allUsers}</option>
+            {userOptions.map((u) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Trips tab */}
