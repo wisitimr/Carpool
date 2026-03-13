@@ -34,6 +34,11 @@ interface BreakdownEntry {
   carName: string;
   share: number;
   gasShare: number;
+  gasOutbound: number;
+  gasReturn: number;
+  gasCost: number;
+  outboundHeadcount: number;
+  returnHeadcount: number;
   parkingShare: number;
   outboundCount: number;
   returnCount: number;
@@ -87,6 +92,7 @@ interface HistoryContentProps {
     paid: string;
     pending: string;
     you: string;
+    onlyMe: string;
     trip: string;
     people: string;
     splitAmong: string;
@@ -242,7 +248,6 @@ function DayBreakdownDetail({
     <ul className="divide-y divide-gray-100 text-sm">
       {entries.map((b, i) => {
         const tripCount = b.outboundCount + b.returnCount;
-        const gasCostPerTrip = tripCount > 0 ? b.gasShare / tripCount : 0;
         const parkingTotal = b.parkingShare * b.passengerCount;
         return (
           <li key={`${b.carId}-${i}`} className="py-2.5">
@@ -262,8 +267,11 @@ function DayBreakdownDetail({
                   )}
                 </div>
               )}
-              {b.gasShare > 0 && (
-                <p>{t.gas}: ฿{gasCostPerTrip.toFixed(2)} × {tripCount} {t.trip} = ฿{b.gasShare.toFixed(2)}</p>
+              {b.gasOutbound > 0 && (
+                <p>{t.gas} ({t.outbound}): ฿{(b.gasCost / 2).toFixed(2)} ÷ {b.outboundHeadcount} {t.people} = ฿{b.gasOutbound.toFixed(2)}</p>
+              )}
+              {b.gasReturn > 0 && (
+                <p>{t.gas} ({t.return}): ฿{(b.gasCost / 2).toFixed(2)} ÷ {b.returnHeadcount} {t.people} = ฿{b.gasReturn.toFixed(2)}</p>
               )}
               {b.parkingShare > 0 && (
                 <p>{t.parking}: ฿{parkingTotal.toFixed(2)} ÷ {b.passengerCount} {t.people} = ฿{b.parkingShare.toFixed(2)}</p>
@@ -973,7 +981,7 @@ export default function HistoryContent({
               onChange={(e) => setOnlyMe(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
             />
-            {t.you}
+            {t.onlyMe}
           </label>
         )}
       </div>
