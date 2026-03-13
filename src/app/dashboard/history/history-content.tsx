@@ -293,6 +293,15 @@ function SettledIcon() {
   );
 }
 
+/** Small clock icon for pending (not yet paid) periods */
+function PendingIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
 /** Collapsible sub-period row — flat style, no nested card borders */
 function SubPeriodRow({
   label,
@@ -319,11 +328,11 @@ function SubPeriodRow({
         className={`flex w-full items-center justify-between py-2 text-left ${depth > 0 ? "pl-3" : ""}`}
       >
         <div className="flex items-center gap-1.5">
-          {settled && <SettledIcon />}
+          {settled ? <SettledIcon /> : <PendingIcon />}
           <p className={`text-xs font-medium ${depth === 0 ? "text-gray-600" : "text-gray-500"}`}>{label}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <p className={`text-xs font-semibold ${settled ? "text-green-600" : depth === 0 ? "text-gray-700" : "text-gray-600"}`}>฿{total.toFixed(2)}</p>
+          <p className={`text-xs font-semibold ${settled ? "text-green-600" : "text-amber-600"}`}>฿{total.toFixed(2)}</p>
           <svg
             className={`h-3 w-3 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             fill="none"
