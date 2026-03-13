@@ -1074,11 +1074,6 @@ export default function HistoryContent({
                               key={trip.id}
                               className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 transition hover:border-gray-200 hover:shadow-sm"
                             >
-                              {/* Trip number badge */}
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-sm font-bold text-gray-600">
-                                #{trip.tripNum}
-                              </div>
-
                               {/* Trip info */}
                               <div className="min-w-0 flex-1">
                                 {isEditing ? (
@@ -1107,17 +1102,19 @@ export default function HistoryContent({
                                   </div>
                                 ) : (
                                   <>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium text-gray-800">{trip.carName}</span>
+                                    <p className="font-medium text-gray-800">
+                                      {t.tripNumber} #{trip.tripNum} <span className="font-normal text-gray-400">&middot;</span> <span className="font-normal text-gray-500">{group.dateLabel}</span>
+                                    </p>
+                                    <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400">
+                                      <span>{trip.carName}</span>
+                                      <span>&middot;</span>
+                                      <span>{trip.time}</span>
                                       {isAdmin && trip.userName && (
                                         <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-600">
                                           {trip.userName}
                                         </span>
                                       )}
                                     </div>
-                                    <p className="mt-0.5 text-xs text-gray-400">
-                                      {trip.time}
-                                    </p>
                                   </>
                                 )}
                               </div>

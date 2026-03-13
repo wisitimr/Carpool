@@ -47,14 +47,11 @@ export default function PendingBreakdown({ entries }: PendingBreakdownProps) {
         {visible.map((b, i) => (
           <details key={i} className="group rounded-xl bg-gray-50">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 [&::-webkit-details-marker]:hidden">
-              <div className="flex min-w-0 items-center gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-200 text-xs font-bold text-gray-600">
-                  #{b.tripNum}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-gray-800">{b.carName}</p>
-                  <p className="text-xs text-gray-500">{b.date}</p>
-                </div>
+              <div className="min-w-0">
+                <p className="font-medium text-gray-800">
+                  {t.tripNumber} #{b.tripNum} <span className="font-normal text-gray-400">&middot;</span> <span className="font-normal text-gray-500">{b.date}</span>
+                </p>
+                <p className="text-xs text-gray-500">{b.carName}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="font-semibold text-gray-900">฿{b.share.toFixed(2)}</span>
