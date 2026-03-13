@@ -44,22 +44,24 @@ export default function CostManagement({ cars }: CostManagementProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {t.car}
-          </label>
-          <select
-            value={carId}
-            onChange={(e) => handleCarChange(e.target.value)}
-            className={inputClass}
-          >
-            {cars.map((car) => (
-              <option key={car.id} value={car.id}>
-                {car.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {cars.length > 1 && (
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+              {t.car}
+            </label>
+            <select
+              value={carId}
+              onChange={(e) => handleCarChange(e.target.value)}
+              className={inputClass}
+            >
+              {cars.map((car) => (
+                <option key={car.id} value={car.id}>
+                  {car.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
             {t.defaultGasCost}

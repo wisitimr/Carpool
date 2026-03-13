@@ -5,7 +5,7 @@ import { addCar, deleteCar } from "@/lib/admin-actions";
 import { useT } from "@/lib/i18n-context";
 
 interface CarManagementProps {
-  cars: { id: string; name: string; licensePlate: string | null; ownerName: string | null }[];
+  cars: { id: string; name: string; licensePlate: string | null }[];
 }
 
 export default function CarManagement({ cars }: CarManagementProps) {
@@ -108,9 +108,6 @@ export default function CarManagement({ cars }: CarManagementProps) {
                       ({car.licensePlate})
                     </span>
                   )}
-                </p>
-                <p className="truncate text-xs text-gray-500">
-                  {t.owner}: {car.ownerName ?? "Unknown"}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">

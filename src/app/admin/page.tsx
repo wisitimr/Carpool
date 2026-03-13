@@ -19,7 +19,7 @@ export default async function AdminPage() {
 
   const userId = user.id;
 
-  const [allUsers, myCars, allCars] =
+  const [allUsers, myCars] =
     await Promise.all([
       prisma.user.findMany({
         select: { id: true, name: true, email: true, role: true },
@@ -27,11 +27,7 @@ export default async function AdminPage() {
       }),
       prisma.car.findMany({
         where: { ownerId: userId },
-        select: { id: true, name: true, defaultGasCost: true },
-      }),
-      prisma.car.findMany({
-        include: { owner: { select: { name: true } } },
-        orderBy: { name: "asc" },
+        select: { id: true, name: true, licensePlate: true, defaultGasCost: true },
       }),
     ]);
 
@@ -85,11 +81,10 @@ export default async function AdminPage() {
           </div>
           <div className="px-5 py-4 sm:px-6 sm:py-5">
             <CarManagement
-              cars={allCars.map((c) => ({
+              cars={myCars.map((c) => ({
                 id: c.id,
                 name: c.name,
                 licensePlate: c.licensePlate,
-                ownerName: c.owner.name,
               }))}
             />
           </div>

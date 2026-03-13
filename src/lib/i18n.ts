@@ -90,7 +90,7 @@ const translations = {
     // Admin
     settings: "Settings",
     qrCode: "QR Code",
-    userManagement: "Passenger Management",
+    userManagement: "User Management",
     pendingApproval: "Pending Approval",
     approve: "Approve",
     noPendingUsers: "No pending passengers.",
@@ -250,7 +250,7 @@ const translations = {
     // Admin
     settings: "ตั้งค่า",
     qrCode: "QR Code",
-    userManagement: "จัดการผู้โดยสาร",
+    userManagement: "จัดการผู้ใช้",
     pendingApproval: "รอการอนุมัติ",
     approve: "อนุมัติ",
     noPendingUsers: "ไม่มีผู้โดยสารที่รอการอนุมัติ",
