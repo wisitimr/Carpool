@@ -1253,12 +1253,6 @@ export default function HistoryContent({
                               <span>{t.paidDate}:</span>
                               <span className="text-gray-700">{p.paidAt}</span>
                             </div>
-                            {p.note && (
-                              <div className="flex justify-between">
-                                <span>{t.note}:</span>
-                                <span className="text-gray-700">{p.note}</span>
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
