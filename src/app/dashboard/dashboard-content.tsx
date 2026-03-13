@@ -19,30 +19,19 @@ interface DebtEntry {
   driverName: string | null;
 }
 
-interface RecentTrip {
-  id: string;
-  carName: string;
-  date: string;
-  time: string;
-  tripNumber: number;
-}
-
 interface DashboardContentProps {
   pendingDebt: number;
   pendingCount: number;
   debtEntries: DebtEntry[];
-  recentTrips: RecentTrip[];
 }
 
 export default function DashboardContent({
   pendingDebt,
   pendingCount,
   debtEntries,
-  recentTrips,
 }: DashboardContentProps) {
   const { t } = useT();
   const [debtOpen, setDebtOpen] = useState(true);
-  const [tripsOpen, setTripsOpen] = useState(true);
   const [expandedSet, setExpandedSet] = useState<Set<number>>(new Set());
   const [visibleCount, setVisibleCount] = useState(5);
 
@@ -256,61 +245,6 @@ export default function DashboardContent({
         </section>
       )}
 
-      {/* Recent Trips */}
-      {recentTrips.length > 0 && (
-        <section>
-          <button
-            type="button"
-            onClick={() => setTripsOpen(!tripsOpen)}
-            className="flex w-full items-center justify-between py-2"
-          >
-            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-500">
-              {t.recentTrips}
-            </h2>
-            <svg
-              className={`h-4 w-4 text-gray-400 transition-transform ${tripsOpen ? "rotate-180" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-
-          {tripsOpen && (
-            <div className="mt-2 space-y-3">
-              {recentTrips.map((trip) => (
-                <div
-                  key={trip.id}
-                  className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3.5 shadow-sm transition hover:border-gray-200"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-                    <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900">{trip.carName}</p>
-                    <p className="text-xs text-gray-400">{trip.date}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {trip.time}
-                    </div>
-                    <p className="mt-0.5 text-xs font-medium text-blue-500">
-                      {t.tripNumber} #{trip.tripNumber}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
     </div>
   );
 }

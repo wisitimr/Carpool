@@ -4,10 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import { headers } from "next/headers";
-import { detectLocale, getTranslations, formatDateMedium, formatDateShort } from "@/lib/i18n";
-import CostForm from "./cost-form";
+import { detectLocale, getTranslations, formatDateMedium } from "@/lib/i18n";
 import ProfileMenu from "./profile-menu";
-import DebtSettlement from "./debt-settlement";
 import DashboardContent from "./dashboard-content";
 import BottomNav from "./bottom-nav";
 import { startOfMonthBangkok, endOfMonthBangkok } from "@/lib/timezone";
@@ -27,27 +25,7 @@ export default async function DashboardPage() {
   const startOfMonth = startOfMonthBangkok();
   const endOfMonth = endOfMonthBangkok();
 
-  const [allCars, ownedCar, recentTrips, debts] =
-    await Promise.all([
-      prisma.car.findMany({
-        where: { ownerId: userId },
-        select: { id: true, name: true, defaultGasCost: true },
-        orderBy: { name: "asc" },
-      }),
-      prisma.car.findFirst({
-        where: { ownerId: userId },
-        select: { id: true },
-      }),
-      prisma.trip.findMany({
-        ...(isAdmin ? {} : { where: { userId } }),
-        include: { car: true, user: { select: { name: true } } },
-        orderBy: { tappedAt: "desc" },
-        take: 5,
-      }),
-      calculateDebts(startOfMonth, endOfMonth),
-    ]);
-
-  const carIds = allCars.map((c) => c.id);
+  const debts = await calculateDebts(startOfMonth, endOfMonth);
 
   const myDebt = debts.find((d) => d.userId === userId);
 
@@ -96,26 +74,6 @@ export default async function DashboardPage() {
     driverName: b.driverName,
   }));
 
-  // Format recent trips for client component
-  const recentTripsData = (() => {
-    const countByDateCar = new Map<string, number>();
-    return recentTrips.map((trip) => {
-      const key = `${trip.date.toISOString().split("T")[0]}-${trip.carId}`;
-      const num = (countByDateCar.get(key) ?? 0) + 1;
-      countByDateCar.set(key, num);
-      return {
-        id: trip.id,
-        carName: trip.car.name,
-        date: formatDateMedium(trip.date, locale),
-        time: trip.tappedAt.toLocaleTimeString(locale === "th" ? "th-TH" : "en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        tripNumber: num,
-      };
-    });
-  })();
-
   return (
     <main className="mx-auto max-w-3xl px-4 pb-24 sm:px-6">
       {/* Header */}
@@ -151,63 +109,7 @@ export default async function DashboardPage() {
           pendingDebt={myDebt?.pendingDebt ?? 0}
           pendingCount={pendingEntries.length}
           debtEntries={debtEntries}
-          recentTrips={recentTripsData}
         />
-
-        {/* Driver: New Trip */}
-        {ownedCar && allCars.length > 0 && (
-          <section id="enter-daily-costs" className="scroll-mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-            <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-                {t.newTrip}
-              </h2>
-            </div>
-            <div className="px-5 py-4 sm:px-6 sm:py-5">
-              <CostForm
-                cars={allCars.map((c) => ({ id: c.id, name: c.name, defaultGasCost: c.defaultGasCost }))}
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Debt Settlement (admin only) */}
-        {isAdmin && (
-          <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-            <div className="border-b border-gray-100 px-5 py-3 sm:px-6 sm:py-4">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 sm:text-sm">
-                {t.debtSettlement}
-              </h2>
-            </div>
-            <div className="px-5 py-4 sm:px-6 sm:py-5">
-              <DebtSettlement
-                debts={debts
-                  .map((d) => {
-                    const myCarBreakdown = d.breakdown.filter((b) => carIds.includes(b.carId));
-                    const myCarDebt = Math.round(myCarBreakdown.reduce((s, b) => s + b.share, 0) * 100) / 100;
-                    return {
-                      userId: d.userId,
-                      userName: d.userName,
-                      pendingDebt: Math.round((myCarDebt - d.totalPaid) * 100) / 100,
-                      totalDebt: myCarDebt,
-                      totalPaid: d.totalPaid,
-                      breakdown: myCarBreakdown.map((b) => ({
-                        carName: b.carName,
-                        date: formatDateShort(b.date, locale),
-                        share: b.share,
-                        gasShare: b.gasShare,
-                        gasCost: b.gasCost,
-                        parkingShare: b.parkingShare,
-                        parkingCost: b.parkingCost,
-                        headcount: b.headcount,
-                      })),
-                    };
-                  })
-                  .filter((d) => d.breakdown.length > 0)}
-                carId={ownedCar?.id ?? allCars[0]?.id ?? ""}
-              />
-            </div>
-          </section>
-        )}
       </div>
 
       <BottomNav isAdmin={isAdmin} />
