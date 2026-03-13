@@ -113,7 +113,7 @@ export default function CarManagement({ cars }: CarManagementProps) {
               <div className="flex shrink-0 items-center gap-2">
                 <a
                   href={`/admin/qr?carId=${car.id}`}
-                  className="rounded-lg border border-blue-300 px-3 py-1.5 text-sm text-blue-700 transition hover:bg-blue-50 active:scale-[0.98]"
+                  className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 active:scale-[0.98]"
                 >
                   {t.qrCode}
                 </a>
