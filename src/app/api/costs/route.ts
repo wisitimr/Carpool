@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
+import { todayBangkok } from "@/lib/timezone";
 
 // GET /api/costs?date=YYYY-MM-DD&carIds=id1,id2 — Fetch trips for given date and cars
 export async function GET(request: NextRequest) {
@@ -18,8 +19,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "date and carIds are required" }, { status: 400 });
   }
 
-  const parsedDate = new Date(date);
-  parsedDate.setHours(0, 0, 0, 0);
+  const bangkokNow = todayBangkok();
+  const bangkokStr = `${bangkokNow.getFullYear()}-${String(bangkokNow.getMonth() + 1).padStart(2, "0")}-${String(bangkokNow.getDate()).padStart(2, "0")}`;
+  const parsedDate = date === bangkokStr
+    ? bangkokNow
+    : (() => { const d = new Date(date + "T00:00:00"); d.setHours(0, 0, 0, 0); return d; })();
 
   const trips = await prisma.trip.findMany({
     where: {
@@ -62,8 +66,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden: you do not own this car" }, { status: 403 });
   }
 
-  const parsedDate = new Date(date);
-  parsedDate.setHours(0, 0, 0, 0);
+  // Use todayBangkok() to ensure the date matches check-in lookup (tap route)
+  // which also uses todayBangkok(). This prevents timezone mismatch.
+  const bangkokToday = todayBangkok();
+  const bangkokTodayStr = `${bangkokToday.getFullYear()}-${String(bangkokToday.getMonth() + 1).padStart(2, "0")}-${String(bangkokToday.getDate()).padStart(2, "0")}`;
+  const parsedDate = date === bangkokTodayStr
+    ? bangkokToday
+    : (() => { const d = new Date(date + "T00:00:00"); d.setHours(0, 0, 0, 0); return d; })();
 
   const linkedIds: string[] = Array.isArray(sharedParkingTripIds) ? sharedParkingTripIds : [];
 

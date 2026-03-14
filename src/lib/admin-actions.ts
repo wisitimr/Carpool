@@ -95,8 +95,11 @@ export async function createTrip(
     throw new Error("Car not found");
   }
 
-  const parsedDate = new Date(date);
-  parsedDate.setHours(0, 0, 0, 0);
+  const bangkokToday = todayBangkok();
+  const bangkokTodayStr = `${bangkokToday.getFullYear()}-${String(bangkokToday.getMonth() + 1).padStart(2, "0")}-${String(bangkokToday.getDate()).padStart(2, "0")}`;
+  const parsedDate = date === bangkokTodayStr
+    ? bangkokToday
+    : (() => { const d = new Date(date + "T00:00:00"); d.setHours(0, 0, 0, 0); return d; })();
 
   await prisma.trip.create({
     data: { carId, date: parsedDate, gasCost, parkingCost },
@@ -134,8 +137,11 @@ export async function updateDefaultGasCost(carId: string, gasCost: number) {
 /** Disable the system for a specific date */
 export async function disableDate(date: string, reason?: string) {
   await requireAdmin();
-  const parsedDate = new Date(date);
-  parsedDate.setHours(0, 0, 0, 0);
+  const bangkokToday = todayBangkok();
+  const bangkokTodayStr = `${bangkokToday.getFullYear()}-${String(bangkokToday.getMonth() + 1).padStart(2, "0")}-${String(bangkokToday.getDate()).padStart(2, "0")}`;
+  const parsedDate = date === bangkokTodayStr
+    ? bangkokToday
+    : (() => { const d = new Date(date + "T00:00:00"); d.setHours(0, 0, 0, 0); return d; })();
 
   await prisma.disabledDate.upsert({
     where: { date: parsedDate },
@@ -148,8 +154,11 @@ export async function disableDate(date: string, reason?: string) {
 /** Re-enable the system for a specific date */
 export async function enableDate(date: string) {
   await requireAdmin();
-  const parsedDate = new Date(date);
-  parsedDate.setHours(0, 0, 0, 0);
+  const bangkokToday = todayBangkok();
+  const bangkokTodayStr = `${bangkokToday.getFullYear()}-${String(bangkokToday.getMonth() + 1).padStart(2, "0")}-${String(bangkokToday.getDate()).padStart(2, "0")}`;
+  const parsedDate = date === bangkokTodayStr
+    ? bangkokToday
+    : (() => { const d = new Date(date + "T00:00:00"); d.setHours(0, 0, 0, 0); return d; })();
 
   await prisma.disabledDate
     .delete({ where: { date: parsedDate } })
