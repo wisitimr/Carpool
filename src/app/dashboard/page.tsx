@@ -167,6 +167,7 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-lg space-y-4 p-4">
         <DashboardContent
           pendingDebt={myDebt?.pendingDebt ?? 0}
+          totalPaid={myDebt?.totalPaid ?? 0}
           pendingCount={pendingEntries.length}
           debtEntries={debtEntries}
           recentTrips={formattedRecentTrips}
