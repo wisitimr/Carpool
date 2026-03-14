@@ -180,6 +180,10 @@ const translations = {
     // Pending Approval
     pendingApprovalTitle: "Pending Approval",
     pendingApprovalDesc: "Your account is awaiting approval from an administrator. You will be able to use the RodBus system once approved.",
+    howItWorks: "How it works:",
+    step1: "You've signed up — that's done!",
+    step2: "Wait for the driver/admin to approve your account",
+    step3: "Once approved, tap NFC or scan QR to check in",
     signedInAs: "Signed in as",
   },
   th: {
@@ -361,6 +365,10 @@ const translations = {
     // Pending Approval
     pendingApprovalTitle: "รอการอนุมัติ",
     pendingApprovalDesc: "บัญชีของคุณกำลังรอการอนุมัติจากแอดมิน คุณจะสามารถใช้ระบบ RodBus ได้หลังจากได้รับการอนุมัติ",
+    howItWorks: "ขั้นตอนการใช้งาน:",
+    step1: "คุณสมัครสมาชิกแล้ว — เสร็จเรียบร้อย!",
+    step2: "รอให้คนขับ/แอดมินอนุมัติบัญชีของคุณ",
+    step3: "เมื่ออนุมัติแล้ว แตะ NFC หรือสแกน QR เพื่อเช็คอิน",
     signedInAs: "เข้าสู่ระบบในชื่อ",
   },
 } as const;

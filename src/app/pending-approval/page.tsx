@@ -30,19 +30,19 @@ export default async function PendingApprovalPage() {
         </p>
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-4 text-left">
-          <h3 className="mb-3 text-sm font-semibold text-foreground">How it works:</h3>
+          <h3 className="mb-3 text-sm font-semibold text-foreground">{t.howItWorks}</h3>
           <ol className="space-y-3 text-sm text-muted-foreground">
             <li className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span>
-              <span>You&apos;ve signed up — that&apos;s done!</span>
+              <span>{t.step1}</span>
             </li>
             <li className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning text-xs font-bold text-white">2</span>
-              <span>Wait for the driver/admin to approve your account</span>
+              <span>{t.step2}</span>
             </li>
             <li className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">3</span>
-              <span>Once approved, tap NFC or scan QR to check in</span>
+              <span>{t.step3}</span>
             </li>
           </ol>
         </div>
