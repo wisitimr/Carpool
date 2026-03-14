@@ -19,8 +19,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "date and carIds are required" }, { status: 400 });
   }
 
-  const parsedDate = new Date(date + "T00:00:00");
-  parsedDate.setHours(0, 0, 0, 0);
+  const bangkokNow = todayBangkok();
+  const bangkokStr = `${bangkokNow.getFullYear()}-${String(bangkokNow.getMonth() + 1).padStart(2, "0")}-${String(bangkokNow.getDate()).padStart(2, "0")}`;
+  const parsedDate = date === bangkokStr
+    ? bangkokNow
+    : (() => { const d = new Date(date + "T00:00:00"); d.setHours(0, 0, 0, 0); return d; })();
 
   const trips = await prisma.trip.findMany({
     where: {
