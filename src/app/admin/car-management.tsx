@@ -99,7 +99,7 @@ export default function CarManagement({ cars }: CarManagementProps) {
           <form onSubmit={handleAdd} className="space-y-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                {t.carName}
+                {t.carName} <span className="text-debt">*</span>
               </label>
               <input
                 type="text"
