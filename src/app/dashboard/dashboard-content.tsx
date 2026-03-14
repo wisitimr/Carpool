@@ -20,7 +20,6 @@ interface RecentTrip {
 
 interface DashboardContentProps {
   pendingDebt: number;
-  totalPaid: number;
   pendingCount: number;
   debtEntries: BreakdownCardEntry[];
   recentTrips: RecentTrip[];
@@ -28,7 +27,6 @@ interface DashboardContentProps {
 
 export default function DashboardContent({
   pendingDebt,
-  totalPaid,
   pendingCount,
   debtEntries,
   recentTrips,
@@ -66,9 +64,6 @@ export default function DashboardContent({
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {pendingCount} {t.pendingItems}
-                  {totalPaid > 0 && (
-                    <span className="ml-1.5 text-settled">· {t.paid} ฿{totalPaid.toFixed(2)}</span>
-                  )}
                 </p>
               </>
             ) : (

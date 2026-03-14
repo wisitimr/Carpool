@@ -395,12 +395,7 @@ export default function ManageContent({ cars, debts, carId, locale, recentTrips 
                         </div>
                         <div className="text-left">
                           <p className="font-semibold text-foreground">{d.userName ?? "Unknown"}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {pendingBreakdown.length} {t.pendingItems}
-                            {d.totalPaid > 0 && (
-                              <span className="ml-1.5 text-settled">· {t.paid} ฿{d.totalPaid.toFixed(2)}</span>
-                            )}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{pendingBreakdown.length} {t.pendingItems}</p>
                         </div>
                       </div>
 
