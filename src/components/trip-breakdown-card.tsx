@@ -85,32 +85,32 @@ export default function TripBreakdownCard({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-2 text-left"
+        className="flex w-full flex-col gap-0.5 text-left"
       >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 overflow-hidden">
-            <span className={`shrink-0 font-medium text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-              {entry.date}{entry.time ? ` · ${entry.time}` : ""}
+        {/* Row 1: date + badges */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className={`font-medium text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+            {entry.date}{entry.time ? ` · ${entry.time}` : ""}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-semibold ${compact ? "text-[10px]" : "text-xs"} ${
+              isPending
+                ? "bg-debt/10 text-debt"
+                : "bg-settled/10 text-settled"
+            }`}
+          >
+            {isPending ? t.pending : (t.paid ?? "Paid")}
+          </span>
+          {hasSharedParking && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+              <Link2 className="h-2.5 w-2.5" />
+              {t.sharedParking ?? "Shared"}
             </span>
-            <div className="flex shrink-0 items-center gap-1">
-              <span
-                className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-semibold ${compact ? "text-[10px]" : "text-xs"} ${
-                  isPending
-                    ? "bg-debt/10 text-debt"
-                    : "bg-settled/10 text-settled"
-                }`}
-              >
-                {isPending ? t.pending : (t.paid ?? "Paid")}
-              </span>
-              {hasSharedParking && (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                  <Link2 className="h-2.5 w-2.5" />
-                  {t.sharedParking ?? "Shared"}
-                </span>
-              )}
-            </div>
-          </div>
-          <p className={`mt-0.5 font-semibold text-foreground ${compact ? "text-sm" : ""}`}>
+          )}
+        </div>
+        {/* Row 2: car name + trip # | price + chevron */}
+        <div className="flex items-center justify-between gap-2">
+          <p className={`min-w-0 font-semibold text-foreground ${compact ? "text-sm" : ""}`}>
             {entry.carName}
             {plateLabel && (
               <span className={`font-normal text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>{plateLabel}</span>
@@ -119,16 +119,16 @@ export default function TripBreakdownCard({
               {t.tripNumber} #{entry.tripNumber}
             </span>
           </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span className={`font-bold ${isPending ? "text-debt" : "text-settled"} ${compact ? "text-base" : "text-lg"}`}>
-            &#3647;{entry.share.toFixed(2)}
-          </span>
-          {isExpanded ? (
-            <ChevronUp className={`text-muted-foreground ${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-          ) : (
-            <ChevronDown className={`text-muted-foreground ${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
-          )}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className={`font-bold ${isPending ? "text-debt" : "text-settled"} ${compact ? "text-base" : "text-lg"}`}>
+              &#3647;{entry.share.toFixed(2)}
+            </span>
+            {isExpanded ? (
+              <ChevronUp className={`text-muted-foreground ${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+            ) : (
+              <ChevronDown className={`text-muted-foreground ${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+            )}
+          </div>
         </div>
       </button>
 
