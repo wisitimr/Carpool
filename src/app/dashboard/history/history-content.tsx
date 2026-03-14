@@ -106,6 +106,7 @@ interface HistoryContentProps {
     pending: string;
     you: string;
     onlyMe: string;
+    allData: string;
     trip: string;
     people: string;
     splitAmong: string;
@@ -715,11 +716,11 @@ export default function HistoryContent({
     });
   }, []);
 
-  // Map<dateISO, BreakdownEntry[]> — raw per-car entries (admin sees all, user sees own)
+  // Map<dateISO, BreakdownEntry[]> — raw per-car entries (admin sees all unless onlyMe, user sees own)
   const dayBreakdownMap = useMemo(() => {
     const map = new Map<string, BreakdownEntry[]>();
     for (const debt of allDebts) {
-      if (!isAdmin && debt.userId !== currentUserId) continue;
+      if ((!isAdmin || onlyMe) && debt.userId !== currentUserId) continue;
       for (const b of debt.breakdown) {
         const list = map.get(b.date) ?? [];
         list.push(b);
@@ -727,7 +728,7 @@ export default function HistoryContent({
       }
     }
     return map;
-  }, [allDebts, currentUserId, isAdmin]);
+  }, [allDebts, currentUserId, isAdmin, onlyMe]);
 
   // Set of settled day keys — days where pendingDebt <= 0
   const settledDays = useMemo(() => {
@@ -838,10 +839,10 @@ export default function HistoryContent({
   }, [tripScroll.visible, locale]);
   const paymentScroll = useInfiniteScroll(filteredPayments);
 
-  // Group summary data by period (admin sees all users, user sees own only)
+  // Group summary data by period (admin sees all users unless onlyMe, user sees own only)
   const summaryGroups = useMemo(() => {
     const groups = groupByPeriod(allDebts, allPayments, summaryPeriod, locale);
-    if (isAdmin) {
+    if (isAdmin && !onlyMe) {
       return groups.filter((g) => g.entries.length > 0);
     }
     return groups
@@ -850,7 +851,7 @@ export default function HistoryContent({
         entries: g.entries.filter((e) => e.userId === currentUserId),
       }))
       .filter((g) => g.entries.length > 0);
-  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId, isAdmin]);
+  }, [allDebts, allPayments, summaryPeriod, locale, currentUserId, isAdmin, onlyMe]);
 
   const summaryScroll = useInfiniteScroll(summaryGroups);
 
@@ -892,6 +893,34 @@ export default function HistoryContent({
           </button>
         ))}
       </div>
+
+      {/* Admin: All / My Data toggle */}
+      {isAdmin && (
+        <div className="flex items-center justify-end">
+          <div className="inline-flex rounded-lg bg-muted p-0.5">
+            <button
+              onClick={() => setOnlyMe(false)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                !onlyMe
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.allData}
+            </button>
+            <button
+              onClick={() => setOnlyMe(true)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                onlyMe
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.onlyMe}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Trips tab */}
       {activeTab === "trips" && (
