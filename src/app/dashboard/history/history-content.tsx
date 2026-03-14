@@ -1380,7 +1380,7 @@ export default function HistoryContent({
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50"
                 >
                   {editStatus === "saving" ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> {t.save}</>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> {t.editing || "Editing..."}</>
                   ) : (
                     <><Pencil className="h-4 w-4" /> {t.edit || "Edit"}</>
                   )}
