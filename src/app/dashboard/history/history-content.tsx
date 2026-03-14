@@ -51,6 +51,7 @@ interface BreakdownEntry {
   driverName: string | null;
   time?: string;
   sharedParkingTripIds?: string[];
+  sharedParkingNames?: string[];
 }
 
 interface DebtWithBreakdown {

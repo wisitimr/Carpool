@@ -19,6 +19,7 @@ export interface BreakdownCardEntry {
   driverName: string | null;
   time?: string;
   sharedParkingTripIds?: string[];
+  sharedParkingNames?: string[];
 }
 
 interface TripBreakdownCardProps {
@@ -49,6 +50,7 @@ export default function TripBreakdownCard({
   const plateLabel = entry.licensePlate ? ` (${entry.licensePlate})` : "";
   const isPending = status === "pending";
 
+  // Build display list: passengers + driver
   const allNames = [...entry.passengerNames];
   if (entry.driverName && !allNames.includes(entry.driverName)) {
     allNames.push(entry.driverName);
@@ -129,17 +131,24 @@ export default function TripBreakdownCard({
               </div>
             )}
             {entry.parkingShare > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <ParkingCircle className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">
-                  {t.parking}
-                  {(entry.sharedParkingTripIds?.length ?? 0) > 0 && entry.parkingHeadcount && entry.parkingHeadcount !== entry.headcount && (
-                    <span className="ml-1 text-xs text-primary">({t.sharedParking ?? "Shared"})</span>
-                  )}
-                </span>
-                <span className="ml-auto font-mono text-foreground">
-                  &#3647;{entry.parkingCost.toFixed(2)} / {entry.parkingHeadcount ?? entry.headcount} = <strong>&#3647;{entry.parkingShare.toFixed(2)}</strong>
-                </span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm">
+                  <ParkingCircle className="h-4 w-4 text-primary" />
+                  <span className="text-muted-foreground">
+                    {t.parking}
+                    {(entry.sharedParkingTripIds?.length ?? 0) > 0 && entry.parkingHeadcount && entry.parkingHeadcount !== entry.headcount && (
+                      <span className="ml-1 text-xs text-primary">({t.sharedParking ?? "Shared"})</span>
+                    )}
+                  </span>
+                  <span className="ml-auto font-mono text-foreground">
+                    &#3647;{entry.parkingCost.toFixed(2)} / {entry.parkingHeadcount ?? entry.headcount} = <strong>&#3647;{entry.parkingShare.toFixed(2)}</strong>
+                  </span>
+                </div>
+                {(entry.sharedParkingTripIds?.length ?? 0) > 0 && entry.sharedParkingNames && entry.sharedParkingNames.length > 0 && (
+                  <div className="ml-6 text-xs text-muted-foreground">
+                    {entry.sharedParkingNames.join(", ")}
+                  </div>
+                )}
               </div>
             )}
           </div>
