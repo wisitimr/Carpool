@@ -29,6 +29,9 @@ export default async function DashboardPage() {
   const [debts, recentTrips] = await Promise.all([
     calculateDebts(startOfMonth, endOfMonth),
     prisma.trip.findMany({
+      where: isAdmin
+        ? {}
+        : { checkIns: { some: { userId } } },
       orderBy: { createdAt: "desc" },
       take: 5,
       include: {

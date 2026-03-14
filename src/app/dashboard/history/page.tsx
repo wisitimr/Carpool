@@ -27,6 +27,9 @@ export default async function HistoryPage() {
 
   const [recentTrips, allDebts, allPayments] = await Promise.all([
     prisma.trip.findMany({
+      where: isAdmin
+        ? {}
+        : { checkIns: { some: { userId } } },
       include: {
         car: true,
         checkIns: { select: { id: true } },
@@ -36,6 +39,7 @@ export default async function HistoryPage() {
     }),
     calculateDebts(allTimeStart, allTimeEnd),
     prisma.payment.findMany({
+      where: isAdmin ? {} : { userId },
       include: { car: true, user: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
     }),
