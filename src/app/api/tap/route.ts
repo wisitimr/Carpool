@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
-import { todayBangkok } from "@/lib/timezone";
+import { todayBangkokUTC } from "@/lib/timezone";
 import { revalidateTag } from "next/cache";
 
 type ValidateError =
@@ -27,7 +27,7 @@ async function validateTap(
     return { error: "owner", car: car.name };
   }
 
-  const today = todayBangkok();
+  const today = todayBangkokUTC();
 
   const disabledDate = await prisma.disabledDate.findUnique({
     where: { date: today },

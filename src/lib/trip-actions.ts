@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { bangkokDateToUTC } from "@/lib/timezone";
 
 /** Update a check-in's date. User can edit own check-ins; admin can edit any. */
 export async function updateCheckInDate(checkInId: string, newDate: string) {
@@ -17,8 +18,7 @@ export async function updateCheckInDate(checkInId: string, newDate: string) {
     throw new Error("Forbidden");
   }
 
-  const parsedDate = new Date(newDate);
-  parsedDate.setHours(0, 0, 0, 0);
+  const parsedDate = bangkokDateToUTC(newDate);
 
   await prisma.checkIn.update({
     where: { id: checkInId },
