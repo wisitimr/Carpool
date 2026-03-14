@@ -876,6 +876,34 @@ export default function HistoryContent({
 
   return (
     <div className="space-y-3">
+      {/* Admin: All / My Data toggle */}
+      {isAdmin && (
+        <div className="flex">
+          <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
+            <button
+              onClick={() => setOnlyMe(false)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                !onlyMe
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.allData}
+            </button>
+            <button
+              onClick={() => setOnlyMe(true)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                onlyMe
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.onlyMe}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tab bar */}
       <div className="flex border-b border-border">
         {tabs.map((tab) => (
@@ -893,34 +921,6 @@ export default function HistoryContent({
           </button>
         ))}
       </div>
-
-      {/* Admin: All / My Data toggle */}
-      {isAdmin && (
-        <div className="flex items-center justify-end">
-          <div className="inline-flex rounded-lg bg-muted p-0.5">
-            <button
-              onClick={() => setOnlyMe(false)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                !onlyMe
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.allData}
-            </button>
-            <button
-              onClick={() => setOnlyMe(true)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                onlyMe
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.onlyMe}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Trips tab */}
       {activeTab === "trips" && (
