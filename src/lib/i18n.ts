@@ -177,9 +177,21 @@ const translations = {
     ownerCannotCheckIn: "Owner Cannot Check In",
     ownerCannotCheckInDesc: "You are the owner of this car. Only passengers need to check in.",
 
+    // Parking sharing
+    shareParkingWithTrips: "Share parking with previous trips",
+    moreTrips: "more trips",
+    showLessTrips: "Show less",
+    sharedParking: "Shared parking",
+    create: "Create",
+    creating: "Creating...",
+
     // Pending Approval
     pendingApprovalTitle: "Pending Approval",
     pendingApprovalDesc: "Your account is awaiting approval from an administrator. You will be able to use the RodBus system once approved.",
+    howItWorks: "How it works:",
+    step1: "You've signed up — that's done!",
+    step2: "Wait for the driver/admin to approve your account",
+    step3: "Once approved, tap NFC or scan QR to check in",
     signedInAs: "Signed in as",
   },
   th: {
@@ -358,9 +370,21 @@ const translations = {
     ownerCannotCheckIn: "เจ้าของรถไม่ต้องเช็คอิน",
     ownerCannotCheckInDesc: "คุณเป็นเจ้าของรถคันนี้ เฉพาะผู้โดยสารเท่านั้นที่ต้องเช็คอิน",
 
+    // Parking sharing
+    shareParkingWithTrips: "แชร์ค่าจอดกับเที่ยวก่อนหน้า",
+    moreTrips: "เที่ยวเพิ่มเติม",
+    showLessTrips: "แสดงน้อยลง",
+    sharedParking: "แชร์ค่าจอด",
+    create: "สร้าง",
+    creating: "กำลังสร้าง...",
+
     // Pending Approval
     pendingApprovalTitle: "รอการอนุมัติ",
     pendingApprovalDesc: "บัญชีของคุณกำลังรอการอนุมัติจากแอดมิน คุณจะสามารถใช้ระบบ RodBus ได้หลังจากได้รับการอนุมัติ",
+    howItWorks: "ขั้นตอนการใช้งาน:",
+    step1: "คุณสมัครสมาชิกแล้ว — เสร็จเรียบร้อย!",
+    step2: "รอให้คนขับ/แอดมินอนุมัติบัญชีของคุณ",
+    step3: "เมื่ออนุมัติแล้ว แตะ NFC หรือสแกน QR เพื่อเช็คอิน",
     signedInAs: "เข้าสู่ระบบในชื่อ",
   },
 } as const;
