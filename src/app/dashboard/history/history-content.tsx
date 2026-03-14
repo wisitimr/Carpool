@@ -32,8 +32,7 @@ interface PaymentRecord {
   paidAt: string;
   amount: number;
   note: string | null;
-  tripNumber: number | null;
-  tripCount: number;
+  tripNumbers: number[];
 }
 
 interface BreakdownEntry {
@@ -1011,8 +1010,7 @@ export default function HistoryContent({
                     <div className="flex items-center justify-between">
                       <p className="text-[11px] text-muted-foreground">
                         {p.carName} &middot; {p.date}
-                        {p.tripCount === 1 && <> &middot; {t.tripNumber} #1</>}
-                        {p.tripCount > 1 && <> &middot; {p.tripCount} {t.trip}</>}
+                        {p.tripNumbers.length > 0 && <> &middot; {t.tripNumber} {p.tripNumbers.map((n) => `#${n}`).join(", ")}</>}
                       </p>
                       <p className="shrink-0 text-[11px] text-muted-foreground">
                         {t.paid} {p.paidAt}
