@@ -99,7 +99,7 @@ export default function CarManagement({ cars }: CarManagementProps) {
           <form onSubmit={handleAdd} className="space-y-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                {t.carName} <span className="text-debt">*</span>
+                {t.carName}
               </label>
               <input
                 type="text"
@@ -125,7 +125,7 @@ export default function CarManagement({ cars }: CarManagementProps) {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                {t.defaultGasCost} (&#3647;) <span className="text-xs font-normal text-muted-foreground/60">({t.optional})</span>
+                {t.defaultGasCost} <span className="text-xs font-normal text-muted-foreground/60">({t.optional})</span>
               </label>
               <input
                 type="number"

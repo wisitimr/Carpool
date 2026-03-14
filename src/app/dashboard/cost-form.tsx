@@ -92,7 +92,7 @@ export default function CostForm({ cars }: CostFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              <Fuel className="mr-1 inline h-3 w-3" /> {t.gasCost} (&#3647;)
+              <Fuel className="mr-1 inline h-3 w-3" /> {t.gasCost}
             </label>
             <input
               type="number"
@@ -107,7 +107,7 @@ export default function CostForm({ cars }: CostFormProps) {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              <ParkingCircle className="mr-1 inline h-3 w-3" /> {t.parkingCost} (&#3647;)
+              <ParkingCircle className="mr-1 inline h-3 w-3" /> {t.parkingCost}
             </label>
             <input
               type="number"
