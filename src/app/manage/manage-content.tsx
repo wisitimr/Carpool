@@ -205,7 +205,7 @@ export default function ManageContent({ cars, debts, carId, locale }: ManageCont
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                    <Fuel className="mr-1 inline h-3 w-3" /> {t.gasCost} (฿)
+                    <Fuel className="mr-1 inline h-3 w-3" /> {t.gasCost}
                   </label>
                   <input
                     type="number"
@@ -220,7 +220,7 @@ export default function ManageContent({ cars, debts, carId, locale }: ManageCont
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                    <ParkingCircle className="mr-1 inline h-3 w-3" /> {t.parkingCost} (฿)
+                    <ParkingCircle className="mr-1 inline h-3 w-3" /> {t.parkingCost}
                   </label>
                   <input
                     type="number"
@@ -261,7 +261,7 @@ export default function ManageContent({ cars, debts, carId, locale }: ManageCont
       {activeTab === "settleDebts" && (
         <div>
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t.pending} {t.debtSettlement.toLowerCase()} by user
+            {t.pendingDebtsByUser}
           </h3>
 
           {usersWithDebt.length === 0 ? (

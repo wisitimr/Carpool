@@ -5,6 +5,7 @@ import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import { headers } from "next/headers";
 import { detectLocale, getTranslations, formatDateShort } from "@/lib/i18n";
+import { Clock } from "lucide-react";
 import HistoryContent from "./history-content";
 import BottomNav from "../bottom-nav";
 
@@ -124,9 +125,7 @@ export default async function HistoryPage() {
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-            <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Clock className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">
