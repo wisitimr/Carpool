@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateDebts } from "@/lib/cost-splitting";
 import { Role } from "@prisma/client";
 import { headers } from "next/headers";
-import { detectLocale, getTranslations, formatDateShort, formatDateMedium } from "@/lib/i18n";
+import { detectLocale, getTranslations, formatDateShort, formatDateMedium, type Locale } from "@/lib/i18n";
 import { ClipboardList } from "lucide-react";
 import ManageContent from "./manage-content";
 import BottomNav from "@/app/dashboard/bottom-nav";
@@ -76,6 +76,12 @@ export default async function ManagePage() {
           driverName: b.driverName,
           sharedParkingTripIds: b.sharedParkingTripIds,
           sharedParkingNames: b.sharedParkingNames,
+          sharedParkingDetails: b.sharedParkingDetails.map((d) => ({
+            carName: d.carName,
+            date: formatDateMedium(d.date, locale as Locale),
+            parkingCost: d.parkingCost,
+            headcount: d.headcount,
+          })),
         })),
       };
     })

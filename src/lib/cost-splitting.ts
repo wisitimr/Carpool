@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
+export interface SharedParkingDetail {
+  carName: string;
+  date: Date;
+  parkingCost: number;
+  headcount: number;
+}
+
 export interface UserDebt {
   userId: string;
   userName: string | null;
@@ -26,6 +33,7 @@ export interface UserDebt {
     createdAt: Date;
     sharedParkingTripIds: string[];
     sharedParkingNames: string[];
+    sharedParkingDetails: SharedParkingDetail[];
   }[];
 }
 
@@ -218,6 +226,36 @@ export async function calculateDebts(
         sharedParkingNames = Array.from(parkingNameSet.values());
       }
 
+      // Build shared parking details: current trip + all linked trips
+      let sharedParkingDetails: SharedParkingDetail[] = [];
+      if (trip.sharedParkingTripIds.length > 0 && trip.parkingCost > 0) {
+        // Add current trip
+        sharedParkingDetails.push({
+          carName: trip.car.name,
+          date: trip.date,
+          parkingCost: trip.parkingCost,
+          headcount,
+        });
+        // Add linked trips
+        for (const linkedTripId of trip.sharedParkingTripIds) {
+          const linkedTrip = allTripsMap.get(linkedTripId);
+          if (!linkedTrip) continue;
+          const linkedCIs = allCheckIns.filter(
+            (c) =>
+              c.tripId === linkedTripId ||
+              (c.tripId === null && c.carId === linkedTrip.carId && c.date.getTime() === linkedTrip.date.getTime())
+          );
+          const linkedPassengerIds = new Set(linkedCIs.map((c) => c.userId));
+          const linkedHeadcount = linkedPassengerIds.size + (linkedPassengerIds.has(linkedTrip.car.ownerId) ? 0 : 1);
+          sharedParkingDetails.push({
+            carName: linkedTrip.car.name,
+            date: linkedTrip.date,
+            parkingCost: linkedTrip.parkingCost,
+            headcount: linkedHeadcount,
+          });
+        }
+      }
+
       entry.totalDebt += perPerson;
       entry.breakdown.push({
         tripId: trip.id,
@@ -239,6 +277,7 @@ export async function calculateDebts(
         createdAt: trip.createdAt,
         sharedParkingTripIds: trip.sharedParkingTripIds,
         sharedParkingNames,
+        sharedParkingDetails,
       });
     }
   }
