@@ -6,7 +6,8 @@ import { headers } from "next/headers";
 import { detectLocale } from "@/lib/i18n";
 import JoinContent from "./join-content";
 
-export default async function JoinPage() {
+export default async function JoinPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
+  const params = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
@@ -72,7 +73,7 @@ export default async function JoinPage() {
           </div>
         )}
 
-        <JoinContent locale={locale} />
+        <JoinContent locale={locale} initialMode={params.mode === "create" ? "create" : "choice"} />
 
         {hasExistingGroups && (
           <a

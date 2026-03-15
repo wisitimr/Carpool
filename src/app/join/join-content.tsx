@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 
 interface JoinContentProps {
   locale: string;
+  initialMode?: "choice" | "create" | "join";
 }
 
-export default function JoinContent({ locale }: JoinContentProps) {
+export default function JoinContent({ locale, initialMode = "choice" }: JoinContentProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<"choice" | "create" | "join">("choice");
+  const [mode, setMode] = useState<"choice" | "create" | "join">(initialMode);
   const [groupName, setGroupName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
