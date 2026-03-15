@@ -20,6 +20,7 @@ export async function createGroup(name: string) {
   const group = await prisma.partyGroup.create({
     data: {
       name: name.trim(),
+      ownerId: user.id,
       members: {
         create: {
           userId: user.id,
@@ -206,9 +207,15 @@ export async function leaveGroup(groupId: string) {
   revalidatePath("/");
 }
 
-/** Delete a party group and all its data (admin only). */
-export async function deleteGroup(groupId: string) {
-  await requireGroupAdmin(groupId);
+/** Delete a party group and all its data (creator only).
+ *  Returns remaining groups so the caller can redirect appropriately. */
+export async function deleteGroup(groupId: string): Promise<{ remainingGroups: { id: string; name: string }[] }> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const group = await prisma.partyGroup.findUnique({ where: { id: groupId } });
+  if (!group) throw new Error("Group not found");
+  if (group.ownerId !== user.id) throw new Error("Only the party owner can delete it");
 
   // Delete trips (and their checkIns via cascade) belonging to this group
   await prisma.trip.deleteMany({ where: { partyGroupId: groupId } });
@@ -216,7 +223,22 @@ export async function deleteGroup(groupId: string) {
   // PartyGroupMember and InviteToken cascade from PartyGroup
   await prisma.partyGroup.delete({ where: { id: groupId } });
 
+  // Find remaining groups
+  const memberships = await prisma.partyGroupMember.findMany({
+    where: { userId: user.id, status: MemberStatus.ACTIVE },
+    include: { partyGroup: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const remainingGroups = memberships.map((m) => m.partyGroup);
+
+  // If only one group left, auto-switch
+  if (remainingGroups.length === 1) {
+    await setActiveGroupId(remainingGroups[0].id);
+  }
+
   revalidatePath("/");
+  return { remainingGroups };
 }
 
 /** Switch the active group (sets cookie). */

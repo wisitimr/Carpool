@@ -29,7 +29,7 @@ export default async function AdminPage() {
     }),
     prisma.partyGroup.findUnique({
       where: { id: activeGroupId },
-      select: { name: true },
+      select: { name: true, ownerId: true },
     }),
   ]);
 
@@ -84,6 +84,7 @@ export default async function AdminPage() {
             tokens={tokens}
             groupId={activeGroupId}
             groupName={partyGroup?.name ?? ""}
+            isOwner={partyGroup?.ownerId === userId}
           />
         }
       />

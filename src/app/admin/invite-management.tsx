@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Copy, Trash2, Plus, Check } from "lucide-react";
-import { generateInviteLink, revokeInviteLink, deleteGroup } from "@/lib/group-actions";
+import { generateInviteLink, revokeInviteLink, deleteGroup, switchActiveGroup } from "@/lib/group-actions";
 import { useRouter } from "next/navigation";
 import { useT } from "@/lib/i18n-context";
+import { Users as UsersIcon } from "lucide-react";
 
 interface InviteManagementProps {
   tokens: {
@@ -16,9 +17,10 @@ interface InviteManagementProps {
   }[];
   groupId: string;
   groupName: string;
+  isOwner: boolean;
 }
 
-export default function InviteManagement({ tokens, groupId, groupName }: InviteManagementProps) {
+export default function InviteManagement({ tokens, groupId, groupName, isOwner }: InviteManagementProps) {
   const { t, locale } = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -26,6 +28,7 @@ export default function InviteManagement({ tokens, groupId, groupName }: InviteM
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pickGroups, setPickGroups] = useState<{ id: string; name: string }[] | null>(null);
 
   const th = locale === "th";
 
@@ -154,8 +157,8 @@ export default function InviteManagement({ tokens, groupId, groupName }: InviteM
         </div>
       )}
 
-      {/* Danger Zone */}
-      <div className="mt-6 rounded-xl border-2 border-debt/30 p-4">
+      {/* Danger Zone — only visible to the party creator */}
+      {isOwner && <div className="mt-6 rounded-xl border-2 border-debt/30 p-4">
         <h3 className="text-sm font-semibold text-debt">
           {th ? "ลบปาร์ตี้" : "Delete Party"}
         </h3>
@@ -167,7 +170,27 @@ export default function InviteManagement({ tokens, groupId, groupName }: InviteM
 
         {deleteError && <p className="mt-2 text-sm text-debt">{deleteError}</p>}
 
-        {!confirmDelete ? (
+        {pickGroups ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm font-medium">
+              {th ? "เลือกปาร์ตี้ที่จะไปต่อ" : "Choose a party to switch to"}
+            </p>
+            {pickGroups.map((g) => (
+              <button
+                key={g.id}
+                onClick={async () => {
+                  await switchActiveGroup(g.id);
+                  router.push("/");
+                  router.refresh();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm font-medium transition hover:bg-accent"
+              >
+                <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                {g.name}
+              </button>
+            ))}
+          </div>
+        ) : !confirmDelete ? (
           <button
             onClick={() => setConfirmDelete(true)}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-debt/30 py-2.5 text-sm font-medium text-debt transition hover:bg-debt/10"
@@ -193,8 +216,15 @@ export default function InviteManagement({ tokens, groupId, groupName }: InviteM
                   setDeleting(true);
                   setDeleteError(null);
                   try {
-                    await deleteGroup(groupId);
-                    router.push("/join");
+                    const { remainingGroups } = await deleteGroup(groupId);
+                    if (remainingGroups.length === 0) {
+                      router.push("/join");
+                    } else if (remainingGroups.length === 1) {
+                      router.push("/");
+                      router.refresh();
+                    } else {
+                      setPickGroups(remainingGroups);
+                    }
                   } catch (e) {
                     setDeleteError(e instanceof Error ? e.message : "Failed to delete");
                     setConfirmDelete(false);
@@ -210,7 +240,7 @@ export default function InviteManagement({ tokens, groupId, groupName }: InviteM
             </div>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
