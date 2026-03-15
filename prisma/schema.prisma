@@ -27,7 +27,8 @@ model User {
   ownedCars   Car[]               @relation("OwnedCars")
   checkIns    CheckIn[]
   payments    Payment[]
-  memberships PartyGroupMember[]
+  memberships    PartyGroupMember[]
+  ownedGroups  PartyGroup[]        @relation("OwnedGroups")
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 }
@@ -35,6 +36,8 @@ model User {
 model PartyGroup {
   id           String              @id @default(cuid())
   name         String
+  ownerId    String?
+  owner      User?               @relation("OwnedGroups", fields: [ownerId], references: [id])
   members      PartyGroupMember[]
   trips        Trip[]
   inviteTokens InviteToken[]
