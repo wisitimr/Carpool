@@ -6,8 +6,7 @@ import { headers } from "next/headers";
 import { detectLocale } from "@/lib/i18n";
 import JoinContent from "./join-content";
 
-export default async function JoinPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
-  const params = await searchParams;
+export default async function JoinPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
@@ -42,8 +41,8 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {locale === "th"
-              ? "สร้างปาร์ตี้ใหม่หรือเข้าร่วมปาร์ตี้ที่มีอยู่ด้วยลิงก์เชิญ"
-              : "Create a new party or join an existing one with an invite link"}
+              ? "สร้างปาร์ตี้ใหม่และเชิญสมาชิก"
+              : "Create a new party and invite members"}
           </p>
         </div>
 
@@ -73,7 +72,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
           </div>
         )}
 
-        <JoinContent locale={locale} initialMode={params.mode === "create" ? "create" : "choice"} />
+        <JoinContent locale={locale} />
 
         {hasExistingGroups && (
           <a
