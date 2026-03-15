@@ -25,8 +25,7 @@ interface BreakdownItem {
   tripNumber: number;
   passengerNames: string[];
   driverName: string | null;
-  gasPaid?: number;
-  parkingPaid?: number;
+  paidAmount?: number;
   sharedParking?: {
     trips: { carName: string; date: string; parkingCost: number; headcount: number }[];
     uniqueNames: string[];
@@ -137,16 +136,10 @@ export default function ManageContent({ cars, debts, carId, locale, recentTrips 
       if (remaining >= entry.share) {
         remaining = Math.round((remaining - entry.share) * 100) / 100;
       } else if (remaining > 0) {
-        const ratio = (entry.share - remaining) / entry.share;
-        const reducedGas = Math.round(entry.gasShare * ratio * 100) / 100;
-        const reducedParking = Math.round(entry.parkingShare * ratio * 100) / 100;
         pending.push({
           ...entry,
           share: Math.round((entry.share - remaining) * 100) / 100,
-          gasShare: reducedGas,
-          parkingShare: reducedParking,
-          gasPaid: Math.round((entry.gasShare - reducedGas) * 100) / 100,
-          parkingPaid: Math.round((entry.parkingShare - reducedParking) * 100) / 100,
+          paidAmount: remaining,
         });
         remaining = 0;
       } else {
@@ -444,8 +437,7 @@ export default function ManageContent({ cars, debts, carId, locale, recentTrips 
                                 passengerNames: b.passengerNames,
                                 driverName: b.driverName,
                                 sharedParking: b.sharedParking ?? null,
-                                gasPaid: b.gasPaid,
-                                parkingPaid: b.parkingPaid,
+                                paidAmount: b.paidAmount,
                               }}
                               isExpanded={isEntryExpanded}
                               onToggle={() => setExpandedEntries((prev) => toggleSet(prev, entryKey))}
