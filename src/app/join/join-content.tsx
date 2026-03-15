@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 
 interface JoinContentProps {
   locale: string;
+  initialMode?: "choice" | "create" | "join";
 }
 
-export default function JoinContent({ locale }: JoinContentProps) {
+export default function JoinContent({ locale, initialMode = "choice" }: JoinContentProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<"choice" | "create" | "join">("choice");
+  const [mode, setMode] = useState<"choice" | "create" | "join">(initialMode);
   const [groupName, setGroupName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -80,7 +81,7 @@ export default function JoinContent({ locale }: JoinContentProps) {
       <div className="mt-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            {th ? "ชื่อกลุ่ม" : "Group Name"}
+            {th ? "ชื่อปาร์ตี้" : "Party Name"}
           </label>
           <input
             type="text"
@@ -104,7 +105,7 @@ export default function JoinContent({ locale }: JoinContentProps) {
             disabled={loading || !groupName.trim()}
             className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
           >
-            {loading ? (th ? "กำลังสร้าง..." : "Creating...") : (th ? "สร้างกลุ่ม" : "Create Group")}
+            {loading ? (th ? "กำลังสร้าง..." : "Creating...") : (th ? "สร้างปาร์ตี้" : "Create Party")}
           </button>
         </div>
       </div>
@@ -159,8 +160,8 @@ export default function JoinContent({ locale }: JoinContentProps) {
           </svg>
         </div>
         <div>
-          <p className="font-semibold text-foreground">{th ? "สร้างกลุ่มใหม่" : "Create New Group"}</p>
-          <p className="text-xs text-muted-foreground">{th ? "เริ่มต้นกลุ่มใหม่และเชิญสมาชิก" : "Start a new group and invite members"}</p>
+          <p className="font-semibold text-foreground">{th ? "สร้างปาร์ตี้ใหม่" : "Create New Party"}</p>
+          <p className="text-xs text-muted-foreground">{th ? "เริ่มต้นปาร์ตี้ใหม่และเชิญสมาชิก" : "Start a new party and invite members"}</p>
         </div>
       </button>
 
