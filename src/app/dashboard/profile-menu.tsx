@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { LogOut, ChevronDown, Check } from "lucide-react";
+import { LogOut, Check, Plus, Link as LinkIcon } from "lucide-react";
+import Link from "next/link";
 import { SignOutButton } from "@clerk/nextjs";
 import { useT } from "@/lib/i18n-context";
 import { switchActiveGroup } from "@/lib/group-actions";
@@ -122,6 +123,15 @@ export default function ProfileMenu({ image, name, email, role, isAdmin, groups,
             </>
           )}
 
+          <Link
+            href="/join"
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition hover:bg-accent"
+          >
+            <Plus className="h-4 w-4 text-muted-foreground" />
+            {t.createGroup} / {t.joinGroup}
+          </Link>
+          <div className="border-t border-border" />
           <SignOutButton>
             <button className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-foreground transition hover:bg-accent">
               <LogOut className="h-4 w-4 text-muted-foreground" />

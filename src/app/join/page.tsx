@@ -10,15 +10,13 @@ export default async function JoinPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
-  // Check if user already has active groups
+  // Check if user has active groups (show "back to dashboard" link if so)
   const activeGroups = await prisma.partyGroupMember.findMany({
     where: { userId: user.id, status: MemberStatus.ACTIVE },
     include: { partyGroup: { select: { name: true } } },
   });
 
-  if (activeGroups.length > 0) {
-    redirect("/dashboard");
-  }
+  const hasExistingGroups = activeGroups.length > 0;
 
   // Check pending memberships
   const pendingMemberships = await prisma.partyGroupMember.findMany({
@@ -75,6 +73,15 @@ export default async function JoinPage() {
         )}
 
         <JoinContent locale={locale} />
+
+        {hasExistingGroups && (
+          <a
+            href="/dashboard"
+            className="mt-6 block text-center text-sm font-medium text-primary hover:text-primary/80"
+          >
+            {locale === "th" ? "← กลับไปแดชบอร์ด" : "← Back to Dashboard"}
+          </a>
+        )}
       </div>
     </div>
   );
