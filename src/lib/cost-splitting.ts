@@ -173,7 +173,7 @@ export async function calculateDebts(
     const nameSet = new Map<string, string>();
     for (const ci of linkedCheckIns) {
       if (!nameSet.has(ci.userId)) {
-        nameSet.set(ci.userId, ci.user.name || "Passenger");
+        nameSet.set(ci.userId, ci.user.name || "Unknown");
       }
     }
 
