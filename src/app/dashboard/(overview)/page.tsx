@@ -170,7 +170,7 @@ export default async function DashboardPage() {
       riderCount: trip.checkIns.length + 1,
       tripNumber: tn,
       isOwner: trip.car.ownerId === userId,
-      paymentStatus: paidTripKeys.has(`${trip.carId}-${dateISO}-${tn}`) ? "paid" as const : "pending" as const,
+      paymentStatus: (trip.car.ownerId === userId || paidTripKeys.has(`${trip.carId}-${dateISO}-${tn}`)) ? "paid" as const : "pending" as const,
     };
   });
 

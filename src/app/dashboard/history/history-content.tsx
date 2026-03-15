@@ -1231,7 +1231,7 @@ export default function HistoryContent({
                                   <span className="text-xs font-medium text-primary">
                                     {t.tripNumber} #{trip.tripNumber}
                                   </span>
-                                  {paidTripKeys.has(`${trip.carId}-${trip.dateISO}-${trip.tripNumber}`) ? (
+                                  {(trip.isOwner || paidTripKeys.has(`${trip.carId}-${trip.dateISO}-${trip.tripNumber}`)) ? (
                                     <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-settled">
                                       <CircleCheck className="h-3 w-3" />
                                       {t.paid}
