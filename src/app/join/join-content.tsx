@@ -49,21 +49,13 @@ export default function JoinContent({ locale, initialMode = "choice" }: JoinCont
           />
         </div>
         {error && <p className="text-sm text-debt">{error}</p>}
-        <div className="flex gap-2">
-          <button
-            onClick={() => { setMode("choice"); setError(null); }}
-            className="flex-1 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground hover:bg-accent"
-          >
-            {th ? "กลับ" : "Back"}
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={loading || !groupName.trim()}
-            className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-          >
-            {loading ? (th ? "กำลังสร้าง..." : "Creating...") : (th ? "สร้างปาร์ตี้" : "Create Party")}
-          </button>
-        </div>
+        <button
+          onClick={handleCreate}
+          disabled={loading || !groupName.trim()}
+          className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+        >
+          {loading ? (th ? "กำลังสร้าง..." : "Creating...") : (th ? "สร้างปาร์ตี้" : "Create Party")}
+        </button>
       </div>
     );
   }
