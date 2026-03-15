@@ -86,7 +86,7 @@ export default function ProfileMenu({ image, name, email, role, isAdmin, groups,
             <>
               <div className="border-b border-border px-4 py-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Groups
+                  Parties
                 </p>
               </div>
               {groups.map((group) => (
@@ -116,7 +116,7 @@ export default function ProfileMenu({ image, name, email, role, isAdmin, groups,
           {!hasMultipleGroups && activeGroup && (
             <>
               <div className="px-4 py-2.5">
-                <p className="text-xs text-muted-foreground">Group</p>
+                <p className="text-xs text-muted-foreground">Party</p>
                 <p className="text-sm font-semibold text-foreground">{activeGroup.name}</p>
               </div>
               <div className="border-t border-border" />

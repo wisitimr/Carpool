@@ -38,12 +38,12 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-foreground">
-            {locale === "th" ? "เข้าร่วมกลุ่ม" : "Join a Group"}
+            {locale === "th" ? "เข้าร่วมปาร์ตี้" : "Join a Party"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {locale === "th"
-              ? "สร้างกลุ่มใหม่หรือเข้าร่วมกลุ่มที่มีอยู่ด้วยลิงก์เชิญ"
-              : "Create a new group or join an existing one with an invite link"}
+              ? "สร้างปาร์ตี้ใหม่หรือเข้าร่วมปาร์ตี้ที่มีอยู่ด้วยลิงก์เชิญ"
+              : "Create a new party or join an existing one with an invite link"}
           </p>
         </div>
 
