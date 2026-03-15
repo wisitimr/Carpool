@@ -79,34 +79,38 @@ export default async function DashboardPage() {
 
   // Compute pending breakdown entries
   const pendingEntries = (() => {
-    if (!myDebt || myDebt.pendingDebt <= 0) return [];
+    if (!myDebt || myDebt.pendingDebt <= 0) return { entries: [] as (typeof debts)[number]["breakdown"], paidAmounts: new Map<number, number>() };
     const sorted = [...myDebt.breakdown].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     let remaining = myDebt.totalPaid;
-    const pending: typeof sorted = [];
+    const entries: typeof sorted = [];
+    const paidAmounts = new Map<number, number>();
     for (const entry of sorted) {
       if (remaining >= entry.share) {
         remaining = Math.round((remaining - entry.share) * 100) / 100;
       } else if (remaining > 0) {
-        const ratio = (entry.share - remaining) / entry.share;
-        pending.push({
+        entries.push({
           ...entry,
           share: Math.round((entry.share - remaining) * 100) / 100,
-          gasShare: Math.round(entry.gasShare * ratio * 100) / 100,
-          parkingShare: Math.round(entry.parkingShare * ratio * 100) / 100,
         });
+        paidAmounts.set(entries.length - 1, remaining);
         remaining = 0;
       } else {
-        pending.push(entry);
+        entries.push(entry);
       }
     }
-    pending.reverse();
-    return pending;
+    entries.reverse();
+    // Adjust paidAmounts keys after reverse
+    const reversedPaid = new Map<number, number>();
+    for (const [idx, amt] of paidAmounts) {
+      reversedPaid.set(entries.length - 1 - idx, amt);
+    }
+    return { entries, paidAmounts: reversedPaid };
   })();
 
   // Format debt entries for client component
-  const debtEntries = pendingEntries.map((b) => ({
+  const debtEntries = pendingEntries.entries.map((b, idx) => ({
     date: formatDateMedium(new Date(b.date), locale),
     carName: b.carName,
     licensePlate: b.licensePlate,
@@ -121,6 +125,7 @@ export default async function DashboardPage() {
     tripNumber: b.tripNumber,
     passengerNames: b.passengerNames,
     driverName: b.driverName,
+    paidAmount: pendingEntries.paidAmounts.get(idx),
     sharedParking: b.sharedParking ? {
       trips: b.sharedParking.trips.map((d) => ({
         carName: d.carName,
@@ -201,7 +206,7 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-lg space-y-4 p-4">
       <DashboardContent
         pendingDebt={myDebt?.pendingDebt ?? 0}
-        pendingCount={pendingEntries.length}
+        pendingCount={pendingEntries.entries.length}
         debtEntries={debtEntries}
         recentTrips={formattedRecentTrips}
       />
