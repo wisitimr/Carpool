@@ -431,6 +431,10 @@ function SummaryCard({
             </div>
           )}
         </div>
+        <span className="flex shrink-0 items-center gap-1.5 text-sm font-bold">
+          {totalPaid > 0 && <span className="text-settled">฿{totalPaid.toFixed(2)}</span>}
+          {pendingDebt > 0 && <span className="text-debt">฿{pendingDebt.toFixed(2)}</span>}
+        </span>
         {isExpanded ? (
           <ChevronUp className="h-4 w-4 text-muted-foreground" />
         ) : (
